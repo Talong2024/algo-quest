@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3 uid="uid://aq_authscreen"]
+[ext_resource type="Script" path="res://scripts/AuthScreen.gd" id="1"]
+[node name="AuthScreen" type="Node2D"]
+script = ExtResource("1")

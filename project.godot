@@ -1,0 +1,41 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="AlgoQuest"
+config/description="Learn Data Structures & Algorithms through a top-down fantasy kingdom"
+run/main_scene="res://scenes/Boot.tscn"
+config/features=PackedStringArray("4.5", "Forward Plus")
+
+[audio]
+
+buses/default_bus_layout="res://assets/codemon/audio_layout.tres"
+
+[autoload]
+
+AssetMap="*res://scripts/autoload/AssetMap.gd"
+GameRouter="*res://scripts/autoload/GameRouter.gd"
+SaveManager="*res://scripts/autoload/SaveManager.gd"
+ScoreTracker="*res://scripts/autoload/ScoreTracker.gd"
+FirebaseManager="*res://scripts/autoload/FirebaseManager.gd"
+AudioManager="*res://scripts/autoload/AudioManager.gd"
+ProgressTracker="*res://scripts/autoload/ProgressTracker.gd"
+SpriteHelper="*res://scripts/shared/SpriteHelper.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=false
+
+[network]
+
+ssl/use_system_ssl=true

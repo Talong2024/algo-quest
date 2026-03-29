@@ -1,0 +1,19 @@
+# Godot 4 generated files
+.godot/
+*.import
+
+# Export artifacts
+export/
+*.pck
+*.exe
+*.x86_64
+*.html
+*.wasm
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
