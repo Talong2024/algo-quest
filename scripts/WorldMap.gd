@@ -111,6 +111,7 @@ func _build_tooltip() -> void:
 	tlbl.add_theme_color_override("font_color", Color("#e8e8d0"))
 	tbg.add_child(tlbl)
 
+# #REGION:MAP_TILES — Draws the world map nodes and connections
 func _draw() -> void:
 	# Roads
 	for conn in ROADS:

@@ -54,6 +54,7 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_preview()
 
+# #REGION:UI — Character creation panel + preview
 func _build_ui() -> void:
 	# Background
 	var bg := ColorRect.new()
@@ -177,6 +178,7 @@ func _build_ui() -> void:
 # ══════════════════════════════════════════════════
 # Preview
 # ══════════════════════════════════════════════════
+# #REGION:PREVIEW — Updates stacked LPC sprites
 func _refresh_preview() -> void:
 	# Body
 	var body_tex: Texture2D = AssetMap.load_tex(AssetMap.LPC_BODIES.get("bodies_1",""))
@@ -215,6 +217,7 @@ func _refresh_preview() -> void:
 		_preview_shirt.hframes = 13; _preview_shirt.vframes = 4
 		_preview_shirt.frame   = 0
 
+# #REGION:LPC — Creates one layer of character preview
 func _make_preview_sprite(pos: Vector2) -> Sprite2D:
 	var s := Sprite2D.new()
 	s.position       = pos

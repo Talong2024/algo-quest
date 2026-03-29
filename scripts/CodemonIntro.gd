@@ -121,6 +121,7 @@ func _build_bg() -> void:
 # ══════════════════════════════════════════════════════════════════
 # ACT 1 — Logo
 # ══════════════════════════════════════════════════════════════════
+# #REGION:LOGO — Codemon DK bracket intro animation
 func _start_logo() -> void:
 	_phase = Phase.LOGO
 	_logo_layer = Node2D.new()
@@ -279,6 +280,7 @@ func _add_stars() -> void:
 # ══════════════════════════════════════════════════════════════════
 # ACT 2 — Street arrival
 # ══════════════════════════════════════════════════════════════════
+# #REGION:MAP_TILES — Street scene with Jimmy walking
 func _start_street() -> void:
 	_phase = Phase.STREET
 	_street_layer = Node2D.new()
@@ -386,6 +388,7 @@ func _start_dialogue() -> void:
 	_build_dialog_box()
 	_show_dialogue(_dial_idx)
 
+# #REGION:UI:DIALOGUE — Codemon-style dialog box
 func _build_dialog_box() -> void:
 	_dialogue_layer = CanvasLayer.new()
 	_dialogue_layer.layer = 10
@@ -454,6 +457,7 @@ func _build_dialog_box() -> void:
 	_next_hint.modulate.a = 0.0
 	_dialogue_layer.add_child(_next_hint)
 
+# #REGION:UI:DIALOGUE — Typewriter text + portrait
 func _show_dialogue(idx: int) -> void:
 	if idx >= DIALOGUE.size():
 		_finish()

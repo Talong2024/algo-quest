@@ -164,9 +164,9 @@ func make_styled_button(text: String, pos: Vector2,
 	b.add_theme_font_size_override("font_size", 12)
 
 	# Apply normal/pressed/hover textures from codemon UI
-	var normal_tex := AssetMap.ui("btn_normal")
-	var select_tex := AssetMap.ui("btn_selected")
-	var click_tex  := AssetMap.ui("btn_clicked")
+	var normal_tex: Texture2D = AssetMap.load_tex(AssetMap.BTN_NORMAL)
+	var select_tex: Texture2D = AssetMap.load_tex(AssetMap.BTN_HOVER)
+	var click_tex:  Texture2D = AssetMap.load_tex(AssetMap.BTN_PRESSED)
 
 	if normal_tex:
 		var sb_normal := StyleBoxTexture.new()

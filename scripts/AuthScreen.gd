@@ -67,6 +67,7 @@ func _ready() -> void:
 # ══════════════════════════════════════════════════
 # UI Construction
 # ══════════════════════════════════════════════════
+# #REGION:UI — Sign-in/sign-up form layout
 func _build_ui() -> void:
 	# Background — use street tile faded
 	var bg := ColorRect.new()
@@ -86,16 +87,31 @@ func _build_ui() -> void:
 				s.z_index = -1
 				add_child(s)
 
-	# Left decoration — codemon logo
-	var logo_tex: Texture2D = AssetMap.load_tex(AssetMap.LOGO_CODEMON)
-	if logo_tex:
-		var logo := Sprite2D.new()
-		logo.texture = logo_tex
-		logo.position = Vector2(230, 220)
-		logo.scale = Vector2(0.28, 0.28)
-		logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		logo.modulate = Color(1,1,1,0.7)
-		add_child(logo)
+	# #REGION:LOGO — Left side AlgoQuest branding (replaces codemon logo)
+	var brand_lbl := Label.new()
+	brand_lbl.text = "ALGOQUEST"
+	brand_lbl.set_position(Vector2(60, 160))
+	brand_lbl.add_theme_font_size_override("font_size", 48)
+	brand_lbl.add_theme_color_override("font_color", Color("#4D96FF"))
+	add_child(brand_lbl)
+	var brand_sub := Label.new()
+	brand_sub.text = "Data Structures\n& Algorithms"
+	brand_sub.set_position(Vector2(62, 222))
+	brand_sub.add_theme_font_size_override("font_size", 16)
+	brand_sub.add_theme_color_override("font_color", Color("#555577"))
+	add_child(brand_sub)
+	# SS bracket decorations
+	var br_tex: Texture2D = AssetMap.load_tex(AssetMap.LOGO_BRACKET)
+	if br_tex:
+		var brl := Sprite2D.new()
+		brl.texture = br_tex; brl.position = Vector2(50, 290)
+		brl.scale = Vector2(0.8, 0.8); brl.modulate = Color(0.3, 0.5, 1.0, 0.5)
+		brl.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; add_child(brl)
+		var brr := Sprite2D.new()
+		brr.texture = br_tex; brr.position = Vector2(420, 290)
+		brr.scale = Vector2(0.8, 0.8); brr.flip_h = true
+		brr.modulate = Color(0.3, 0.5, 1.0, 0.5)
+		brr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; add_child(brr)
 
 	# Jimmy sprite on left
 	var jimmy_tex: Texture2D = AssetMap.load_tex(AssetMap.JIMMY)
@@ -281,6 +297,7 @@ func _lbl(text: String, pos: Vector2, sz: int, col: Color) -> Label:
 # ══════════════════════════════════════════════════
 # Mode toggle
 # ══════════════════════════════════════════════════
+# #REGION:UI:MODE — Toggle sign-in vs sign-up fields
 func _set_mode(mode: String) -> void:
 	_mode = mode
 	var is_signup: bool = mode == "signup"

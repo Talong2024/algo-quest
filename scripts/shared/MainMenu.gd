@@ -9,23 +9,36 @@ func _ready() -> void:
 	_reveal_title()
 	AudioManager.play_bgm("menu")
 
+# #REGION:VIDEO — Main menu animated background
 func _build_video_bg() -> void:
-	var video_path: String = AssetMap.MENU_BG_VIDEO
-	if FileAccess.file_exists(video_path):
-		var stream = load(video_path)
-		if stream is VideoStream:
-			var vp := VideoStreamPlayer.new()
-			vp.stream   = stream
-			vp.autoplay = true
-			vp.loop     = true
-			vp.expand   = true
-			vp.z_index  = -10
-			vp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-			add_child(vp)
+	# Try .ogv first (Godot 4 native), then .mp4 (needs GodotFFmpeg plugin)
+	# To convert: ffmpeg -i main_menu_bg.mp4 -c:v libtheora -q:v 7 -c:a libvorbis main_menu_bg.ogv
+	var paths: Array = [
+		"res://assets/video/main_menu_bg.ogv",
+		"res://assets/video/main_menu_bg.mp4",
+		AssetMap.MENU_BG_VIDEO,
+	]
+	for video_path in paths:
+		if not FileAccess.file_exists(video_path as String): continue
+		# Use push_error suppression - mp4 gives "No loader found" error which is expected
+		var stream: Resource = null
+		if (video_path as String).ends_with(".ogv"):
+			stream = load(video_path as String)
 		else:
-			_fallback_bg()
-	else:
-		_fallback_bg()
+			# MP4 requires GodotFFmpeg plugin - skip silently if unavailable
+			continue
+		if stream == null: continue
+		if not (stream is VideoStream): continue
+		var vp := VideoStreamPlayer.new()
+		vp.stream   = stream as VideoStream
+		vp.autoplay = true
+		vp.loop     = true
+		vp.expand   = true
+		vp.z_index  = -10
+		vp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(vp)
+		return
+	_fallback_bg()
 
 	var vign := ColorRect.new()
 	vign.color = Color(0.0, 0.0, 0.05, 0.62)
@@ -33,6 +46,7 @@ func _build_video_bg() -> void:
 	vign.z_index = -8
 	add_child(vign)
 
+# #REGION:VIDEO:FALLBACK — Street tile bg when video unavailable
 func _fallback_bg() -> void:
 	var bg := ColorRect.new()
 	bg.color = Color("#060612")
@@ -49,6 +63,7 @@ func _fallback_bg() -> void:
 				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 				s.z_index = -9; add_child(s)
 
+# #REGION:UI — Title, buttons, panel layout
 func _build_ui() -> void:
 	# Title
 	var glow := _lbl("ALGOQUEST", Vector2(183, 143), 88, Color(0.1,0.3,0.8,0.3))
@@ -88,6 +103,7 @@ func _build_ui() -> void:
 	_lbl("v0.1  ·  A Syntax Squad Game", Vector2(900, 694), 11, Color("#333355"))
 	_lbl("Press ESC to quit", Vector2(20, 694), 11, Color("#222233"))
 
+# #REGION:BUTTONS — Creates codemon-styled menu button
 func _add_btn(text: String, pos: Vector2, sz: Vector2, cb: Callable) -> void:
 	var b: Button = AssetMap.make_codemon_button(text, sz)
 	b.set_position(pos); b.modulate.a = 0.0; b.pressed.connect(cb)
@@ -99,6 +115,7 @@ func _lbl(text: String, pos: Vector2, sz: int, col: Color) -> Label:
 	l.add_theme_color_override("font_color", col)
 	add_child(l); return l
 
+# #REGION:ANIMATION — Title slide-in tween
 func _reveal_title() -> void:
 	await get_tree().create_timer(0.3).timeout
 	var title := get_node_or_null("Title") as Label

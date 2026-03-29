@@ -106,7 +106,7 @@ func load_player_doc() -> void:
 		"Authorization: Bearer %s" % _id_token
 	], HTTPClient.METHOD_GET, "")
 
-func save_progress(chapter: int, level: int, score: int, perfect: bool) -> void:
+func save_progress(chapter: int, level: int, _score: int, _perfect: bool) -> void:
 	if not is_signed_in(): return
 	var url: String = "%s/players/%s?key=%s" % [FS_BASE % PROJECT_ID, _uid, API_KEY]
 	var snap: Dictionary = ProgressTracker.get_world_map_snapshot()

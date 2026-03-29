@@ -38,6 +38,7 @@ func _build() -> void:
 	_add_stars(bg)
 	_animate()
 
+# #REGION:BACKGROUND — Star particle decorations
 func _add_stars(parent: Node) -> void:
 	var rng := RandomNumberGenerator.new(); rng.seed = 77
 	for _i in 80:
@@ -49,6 +50,7 @@ func _add_stars(parent: Node) -> void:
 		s.set_size(Vector2(sz, sz))
 		parent.add_child(s)
 
+# #REGION:LOGO — [SS] bracket logo animation sequence
 func _animate() -> void:
 	# ── Bracket sprites ──────────────────────────
 	var br_tex: Texture2D = AssetMap.load_tex(AssetMap.LOGO_BRACKET)
