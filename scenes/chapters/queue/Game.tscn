@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://aq_queue_game"]
-[ext_resource type="Script" path="res://scripts/chapters/queue/Game.gd" id="1"]
+[gd_scene load_steps=2 format=3 uid="uid://ps6icpbb2fis"]
+
+[ext_resource type="Script" uid="uid://c6s1fdgw51j3v" path="res://scripts/chapters/queue/Game.gd" id="1"]
+
 [node name="Game" type="Node2D"]
 script = ExtResource("1")
