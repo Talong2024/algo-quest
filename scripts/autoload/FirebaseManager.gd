@@ -19,7 +19,7 @@ extends Node
 # ═══════════════════════════════════════════════════
 
 # ── CONFIGURE THESE ────────────────────────────────
-const PROJECT_ID: String = "YOUR_FIREBASE_PROJECT_ID"
+const PROJECT_ID: String = "algoquest-3f812"
 const API_KEY:    String = "YOUR_FIREBASE_WEB_API_KEY"
 # ───────────────────────────────────────────────────
 
@@ -45,7 +45,8 @@ func _ready() -> void:
 
 func is_configured() -> bool:
 	return PROJECT_ID != "YOUR_FIREBASE_PROJECT_ID" \
-		and API_KEY != "YOUR_FIREBASE_WEB_API_KEY"
+		and API_KEY != "YOUR_FIREBASE_WEB_API_KEY" \
+		and PROJECT_ID != "" and API_KEY != ""
 
 func is_signed_in() -> bool:
 	return _id_token != ""

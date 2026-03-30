@@ -29,6 +29,12 @@ func setup(node_data: Dictionary, head: bool = false, tail: bool = false) -> voi
 	_update_sprite()
 	queue_redraw()
 
+
+func set_state(head: bool, tail: bool) -> void:
+	is_head = head
+	is_tail = tail
+	queue_redraw()
+
 func _build() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

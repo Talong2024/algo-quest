@@ -134,21 +134,23 @@ const CODEMON: Dictionary = {
 }
 
 #REGION:AUDIO ──────────────────────────────────────
+# Actual file names from assets/codemon/audio/
 const BGM: Dictionary = {
-	"menu": "res://assets/codemon/audio/music/menu.ogg",
-	"ch1":  "res://assets/codemon/audio/music/ch1.ogg",
-	"ch2":  "res://assets/codemon/audio/music/ch2.ogg",
-	"ch3":  "res://assets/codemon/audio/music/ch3.ogg",
-	"ch4":  "res://assets/codemon/audio/music/ch4.ogg",
-	"ch5":  "res://assets/codemon/audio/music/ch5.ogg",
-	"boss": "res://assets/codemon/audio/music/boss.ogg",
+	"menu":  "res://assets/codemon/audio/music/street_laboratory.ogg",
+	"ch1":   "res://assets/codemon/audio/music/street_laboratory.ogg",
+	"ch2":   "res://assets/codemon/audio/music/mountain.ogg",
+	"ch3":   "res://assets/codemon/audio/music/desert.ogg",
+	"ch4":   "res://assets/codemon/audio/music/forest.ogg",
+	"ch5":   "res://assets/codemon/audio/music/beach.ogg",
+	"boss":  "res://assets/codemon/audio/music/boss.ogg",
 }
 const SFX: Dictionary = {
-	"correct": "res://assets/codemon/audio/sfx/correct.ogg",
-	"wrong":   "res://assets/codemon/audio/sfx/wrong.ogg",
-	"click":   "res://assets/codemon/audio/sfx/click.ogg",
-	"chapter": "res://assets/codemon/audio/sfx/chapter.ogg",
-	"lose":    "res://assets/codemon/audio/sfx/lose.ogg",
+	"correct": "res://assets/codemon/audio/sfx/success.ogg",
+	"wrong":   "res://assets/codemon/audio/sfx/fail.ogg",
+	"click":   "res://assets/codemon/audio/sfx/button.ogg",
+	"chapter": "res://assets/codemon/audio/sfx/success.ogg",
+	"lose":    "res://assets/codemon/audio/sfx/fail.ogg",
+	"step":    "res://assets/codemon/audio/sfx/footstep.ogg",
 }
 
 const FONT_TTF: String = "res://assets/codemon/font/freepixel.ttf"

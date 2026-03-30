@@ -27,6 +27,24 @@ var depth_idx:  int        = 0   # 0 = top
 var _sprite:    Sprite2D
 var _pulse:     float      = 0.0
 
+
+var _target_y:   float = 0.0
+var _move_speed: float = 200.0
+
+func set_target(ty: float, depth_i: int, total: int, is_top_flag: bool) -> void:
+	_target_y = ty
+	depth_idx   = depth_i
+	stack_depth = total
+	is_top      = is_top_flag
+	_update_sprite()
+	queue_redraw()
+
+func pop_anim() -> void:
+	var tw := create_tween()
+	tw.tween_property(self, "scale", Vector2(1.5, 1.5), 0.08)
+	tw.tween_property(self, "scale", Vector2(0.0, 0.0), 0.18)
+	tw.tween_callback(queue_free)
+
 func _ready() -> void:
 	_build()
 	_setup_area()
@@ -98,3 +116,11 @@ func _draw() -> void:
 	
 	# Depth label
 	draw_string(ThemeDB.fallback_font, Vector2(-10, 40), "depth:%d" % depth_idx, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#555577") * Color(1,1,1,alpha))
+
+func _process(delta: float) -> void:
+	if abs(position.y - _target_y) > 2.0:
+		position.y = move_toward(position.y, _target_y, _move_speed * delta)
+	_pulse += delta * 3.0
+	if is_top:
+		_sprite.scale = Vector2(2.0 + sin(_pulse) * 0.1, 2.0 + sin(_pulse) * 0.1)
+	queue_redraw()

@@ -29,6 +29,24 @@ var _sprite:   Sprite2D
 var _glow:     float      = 0.0
 var _bounce:   float      = 0.0
 
+
+var _target_y:     float = 0.0
+var _move_speed:   float = 180.0   # pixels per second
+var patience_ratio: float = 1.0   # 0.0=expired, 1.0=full — drives patience bar
+
+func set_target_y(y: float) -> void:
+	_target_y = y
+
+func _process(delta: float) -> void:
+	# Smoothly move citizen toward target Y position
+	if abs(position.y - _target_y) > 2.0:
+		position.y = move_toward(position.y, _target_y, _move_speed * delta)
+	# Animate front citizen bounce
+	if is_front:
+		_bounce += delta * 2.0
+		_sprite.position.y = -14.0 + sin(_bounce) * 4.0
+	queue_redraw()
+
 func _ready() -> void:
 	_build_visuals()
 	_setup_input()
@@ -42,6 +60,13 @@ func set_front(v: bool) -> void:
 	is_front = v
 	_update_visuals()
 	queue_redraw()
+
+func play_serve_anim() -> void:
+	# Flash green then shrink out when served
+	var tw := create_tween()
+	tw.tween_property(self, "scale", Vector2(1.4, 1.4), 0.1)
+	tw.tween_property(self, "scale", Vector2(0.0, 0.0), 0.2)
+	tw.tween_callback(queue_free)
 
 func _build_visuals() -> void:
 	# Background circle
@@ -79,12 +104,6 @@ func _update_visuals() -> void:
 	var key: String   = CITIZEN_SPRITES.get(ctype, "int") as String
 	var tex: Texture2D = AssetMap.codemon(key)
 	if tex: _sprite.texture = tex
-
-func _process(delta: float) -> void:
-	_bounce += delta * 2.0
-	if is_front:
-		_sprite.position.y = -14.0 + sin(_bounce) * 4.0
-	queue_redraw()
 
 func _draw() -> void:
 	var ctype: String = data.get("type", "normal") as String

@@ -39,3 +39,7 @@ window/size/resizable=false
 [network]
 
 ssl/use_system_ssl=true
+
+[rendering]
+
+textures/default_texture_filter=0
