@@ -1,250 +1,117 @@
 extends Node2D
 # ═══════════════════════════════════════════════════
-# CharacterSelect.gd
-# Player picks an avatar before entering the world.
-# Avatar is stored in SaveManager and shown on
-# WorldMap HUD and cutscene portraits.
+# CharacterSelect.gd — Pick a class, preview with LPC character
 # ═══════════════════════════════════════════════════
 
+const LPC_SPRITE = preload("res://scripts/lpc/CharacterSprite.gd")
+
 const CHARACTERS: Array = [
-	{
-		"id":    "keeper",
-		"name":  "The Keeper",
-		"title": "Classic",
-		"desc":  "The original Code Keeper. Balanced in all DSAs.",
-		"color": Color("#4D96FF"),
-		"codemon": "",   # uses jimmy.png
-		"bonus": "No bonus — pure skill.",
-	},
-	{
-		"id":    "queue_knight",
-		"name":  "Queue Knight",
-		"title": "Queue Specialist",
-		"desc":  "Trained at the Kingdom Gate. Earns +10% score in Ch1.",
-		"color": Color("#6BCB77"),
-		"codemon": "int",
-		"bonus": "+10% score in Kingdom Queue",
-	},
-	{
-		"id":    "stack_mage",
-		"name":  "Stack Mage",
-		"title": "Stack Specialist",
-		"desc":  "Wizard of the Castle. Earns +10% score in Ch2.",
-		"color": Color("#C77DFF"),
-		"codemon": "if",
-		"bonus": "+10% score in Castle of Echoes",
-	},
-	{
-		"id":    "list_engineer",
-		"name":  "List Engineer",
-		"title": "List Specialist",
-		"desc":  "Royal train conductor. Earns +10% score in Ch3.",
-		"color": Color("#FFD93D"),
-		"codemon": "array",
-		"bonus": "+10% score in Chain Train",
-	},
-	{
-		"id":    "tree_oracle",
-		"name":  "Tree Oracle",
-		"title": "Tree Specialist",
-		"desc":  "Forest guardian. Earns +10% score in Ch4.",
-		"color": Color("#6BCB77"),
-		"codemon": "for",
-		"bonus": "+10% score in Oracle's Forest",
-	},
-	{
-		"id":    "graph_ranger",
-		"name":  "Graph Ranger",
-		"title": "Graph Specialist",
-		"desc":  "Kingdom road scout. Earns +10% score in Ch5.",
-		"color": Color("#FF9F43"),
-		"codemon": "while",
-		"bonus": "+10% score in Kingdom Roads",
-	},
+	{"id":"keeper",      "name":"The Keeper",     "title":"Classic",          "color":Color("#4D96FF"), "bonus":"No bonus — pure skill.",           "desc":"The original Code Keeper. Balanced in all DSAs."},
+	{"id":"queue_knight","name":"Queue Knight",    "title":"Queue Specialist", "color":Color("#6BCB77"), "bonus":"+10% score in Kingdom Queue",      "desc":"Trained at the Kingdom Gate. Expert at FIFO."},
+	{"id":"stack_mage",  "name":"Stack Mage",      "title":"Stack Specialist", "color":Color("#C77DFF"), "bonus":"+10% score in Castle Stack",       "desc":"Master of last-in first-out sorcery."},
+	{"id":"list_rider",  "name":"List Rider",      "title":"List Specialist",  "color":Color("#FFD93D"), "bonus":"+10% score in Train Linked List",  "desc":"Linked list navigator extraordinaire."},
+	{"id":"tree_warden", "name":"Tree Warden",     "title":"Tree Specialist",  "color":Color("#FF6B6B"), "bonus":"+10% score in Forest BST",         "desc":"Guardian of the binary search forest."},
 ]
 
-var _selected: int = 0
-var _cards:    Array = []
+var _selected_idx: int = 0
+var _preview: Node2D
+var _name_lbl: Label
+var _title_lbl: Label
+var _desc_lbl: Label
+var _bonus_lbl: Label
 
 func _ready() -> void:
-	# Default to previously saved character if any
-	var saved: String = SaveManager.get_setting("character_id", "") as String
-	if saved != "":
-		for i in CHARACTERS.size():
-			if (CHARACTERS[i]["id"] as String) == saved:
-				_selected = i
-				break
-	_build_ui()
+	_build_bg()
+	_build_preview()
+	_build_selector()
+	_build_info()
+	_build_confirm()
+	_refresh()
 
-func _build_ui() -> void:
+func _build_bg() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color("#0a0a0f")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color("#0d0f1a")
+	bg.set_position(Vector2.ZERO)
+	bg.set_size(Vector2(1280, 720))
 	add_child(bg)
+	var title := Label.new()
+	title.text = "Choose Your Class"
+	title.set_position(Vector2(440, 16))
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color("#FFD93D"))
+	add_child(title)
 
-	var hdr := ColorRect.new()
-	hdr.color = Color("#0d0d1a")
-	hdr.set_position(Vector2.ZERO)
-	hdr.set_size(Vector2(1280, 70))
-	add_child(hdr)
+func _build_preview() -> void:
+	# Show the player's chosen LPC appearance
+	_preview = LPC_SPRITE.new()
+	_preview.scale = Vector2(6, 6)
+	# Offset: feet at y=440, centered x: 640 - 32*6 = 448
+	_preview.position = Vector2(640 - 32*6, 440 - 61*6)
+	add_child(_preview)
+	var saved: Dictionary = SaveManager.get_player_appearance()
+	if saved.is_empty():
+		saved = CharacterRandomizer.randomize_character()
+	_preview.apply(saved)
+	_preview.play("idle")
+	_preview.set_direction(2)
 
-	_lbl("Choose your Code Keeper", Vector2(430, 16), 24, Color("#e8e8f0"))
-	_lbl("Your avatar and specialisation for the journey", Vector2(420, 46), 13, Color("#555577"))
-
-	# Character cards — 3 per row
+func _build_selector() -> void:
+	var x: float = 60.0
 	for i in CHARACTERS.size():
-		_build_card(i)
+		var ch: Dictionary = CHARACTERS[i]
+		var btn := Button.new()
+		btn.text = ch["name"]
+		btn.set_position(Vector2(x, 600))
+		btn.set_size(Vector2(220, 60))
+		btn.add_theme_font_size_override("font_size", 13)
+		btn.add_theme_color_override("font_color", ch["color"] as Color)
+		var idx: int = i
+		btn.pressed.connect(func(): _on_pick(idx))
+		add_child(btn)
+		x += 234.0
 
-	# Detail panel (bottom)
-	var detail_bg := ColorRect.new()
-	detail_bg.name = "DetailBG"
-	detail_bg.color = Color("#13131f")
-	detail_bg.set_position(Vector2(0, 570))
-	detail_bg.set_size(Vector2(1280, 150))
-	add_child(detail_bg)
+func _build_info() -> void:
+	var px: float = 80.0
+	var py: float = 60.0
+	_name_lbl  = _lbl("", Vector2(px, py),      22, Color("#e8e8f0"))
+	_title_lbl = _lbl("", Vector2(px, py+34),   13, Color("#aaaacc"))
+	_desc_lbl  = _lbl("", Vector2(px, py+60),   12, Color("#888899"))
+	_bonus_lbl = _lbl("", Vector2(px, py+90),   13, Color("#6BCB77"))
 
-	_lbl("", Vector2(40, 585), 20, Color("#e8e8f0")).name = "DetailName"
-	_lbl("", Vector2(40, 615), 14, Color("#888899")).name = "DetailDesc"
-	_lbl("", Vector2(40, 642), 13, Color("#FFD93D")).name = "DetailBonus"
-
-	var confirm_btn := Button.new()
-	confirm_btn.name = "ConfirmBtn"
-	confirm_btn.text = "Begin Adventure as %s  ▶" % (CHARACTERS[_selected]["name"] as String)
-	confirm_btn.set_position(Vector2(800, 590))
-	confirm_btn.set_size(Vector2(440, 60))
-	confirm_btn.add_theme_font_size_override("font_size", 18)
-	confirm_btn.add_theme_color_override("font_color",
-		CHARACTERS[_selected]["color"] as Color)
-	confirm_btn.pressed.connect(_confirm)
-	add_child(confirm_btn)
-
-	_update_detail()
-
-func _build_card(idx: int) -> void:
-	var ch:   Dictionary = CHARACTERS[idx]
-	var col:  Color      = ch["color"] as Color
-	var row:  int        = idx / 3
-	var col_n: int       = idx % 3
-	var cx:   float      = 40.0 + col_n * 400.0
-	var cy:   float      = 90.0 + row * 240.0
-
-	var card := ColorRect.new()
-	card.name  = "Card_%d" % idx
-	card.color = col.darkened(0.65) if idx == _selected else Color("#13131f")
-	card.set_position(Vector2(cx, cy))
-	card.set_size(Vector2(360, 210))
-	add_child(card)
-	_cards.append(card)
-
-	# Color accent bar
-	var accent := ColorRect.new()
-	accent.color = col
-	accent.set_position(Vector2.ZERO)
-	accent.set_size(Vector2(360, 5))
-	card.add_child(accent)
-
-	# Avatar — codemon sprite or placeholder circle
-	var avatar_node := Node2D.new()
-	avatar_node.position = Vector2(60, 90)
-	card.add_child(avatar_node)
-
-	var codemon_key: String = ch["codemon"] as String
-	if codemon_key != "":
-		var tex: Texture2D = AssetMap.codemon(codemon_key)
-		if tex:
-			var sprite := Sprite2D.new()
-			sprite.texture        = tex
-			sprite.scale          = Vector2(2.5, 2.5)
-			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			avatar_node.add_child(sprite)
-	# Else: jimmy.png would go here, left as circle for now
-
-	# Name + title
-	var name_lbl := Label.new()
-	name_lbl.text = ch["name"] as String
-	name_lbl.set_position(Vector2(100, 18))
-	name_lbl.add_theme_font_size_override("font_size", 17)
-	name_lbl.add_theme_color_override("font_color", col)
-	card.add_child(name_lbl)
-
-	var title_lbl := Label.new()
-	title_lbl.text = ch["title"] as String
-	title_lbl.set_position(Vector2(100, 44))
-	title_lbl.add_theme_font_size_override("font_size", 12)
-	title_lbl.add_theme_color_override("font_color", Color("#555577"))
-	card.add_child(title_lbl)
-
-	# Selected indicator
-	if idx == _selected:
-		var sel := Label.new()
-		sel.text = "✓ Selected"
-		sel.set_position(Vector2(240, 180))
-		sel.add_theme_font_size_override("font_size", 12)
-		sel.add_theme_color_override("font_color", col)
-		card.add_child(sel)
-
-	# Clickable area
-	var area  := Area2D.new()
-	var shape := CollisionShape2D.new()
-	var box   := RectangleShape2D.new()
-	box.size   = Vector2(360, 210)
-	shape.shape = box
-	area.position = Vector2(180, 105)
-	area.add_child(shape)
-	var capture_idx := idx
-	area.input_event.connect(func(_vp, event, _i):
-		if event is InputEventMouseButton:
-			var mb := event as InputEventMouseButton
-			if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-				_select(capture_idx)
-	)
-	card.add_child(area)
-
-func _select(idx: int) -> void:
-	_selected = idx
-	# Rebuild cards to update selection visuals
-	for c in _cards:
-		if is_instance_valid(c): c.queue_free()
-	_cards.clear()
-	for i in CHARACTERS.size():
-		_build_card(i)
-	_update_detail()
-
-	# Update confirm button text + color
-	var btn := get_node_or_null("ConfirmBtn") as Button
-	if btn:
-		btn.text = "Begin Adventure as %s  ▶" % (CHARACTERS[_selected]["name"] as String)
-		btn.add_theme_color_override("font_color",
-			CHARACTERS[_selected]["color"] as Color)
-
-func _update_detail() -> void:
-	var ch: Dictionary = CHARACTERS[_selected]
-	var name_lbl := get_node_or_null("DetailName") as Label
-	var desc_lbl := get_node_or_null("DetailDesc") as Label
-	var bonus_lbl := get_node_or_null("DetailBonus") as Label
-	if name_lbl: name_lbl.text = ch["name"] as String
-	if desc_lbl: desc_lbl.text = ch["desc"] as String
-	if bonus_lbl: bonus_lbl.text = "Bonus: " + (ch["bonus"] as String)
-
-func _confirm() -> void:
-	var ch: Dictionary = CHARACTERS[_selected]
-	var char_id: String = ch["id"] as String
-	SaveManager.set_setting("character_id", char_id)
-	SaveManager.set_setting("character_color",
-		(ch["color"] as Color).to_html())
-	SaveManager.set_setting("character_name", ch["name"] as String)
-	# Play intro cutscene first time, skip on subsequent character changes
-	# Save character choice to Firebase
-	if FirebaseManager.is_signed_in():
-		FirebaseManager.save_progress(0, 0, 0, false)
-	if not ProgressTracker.cutscene_seen("intro"):
-		GameRouter.go_cutscene("intro", func(): GameRouter.go_world_map())
-	else:
-		GameRouter.go_world_map()
+func _build_confirm() -> void:
+	var btn := Button.new()
+	btn.text = "Start Adventure →"
+	btn.set_position(Vector2(490, 670))
+	btn.set_size(Vector2(300, 40))
+	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_color_override("font_color", Color("#FFD93D"))
+	btn.pressed.connect(_on_confirm)
+	add_child(btn)
 
 func _lbl(text: String, pos: Vector2, sz: int, col: Color) -> Label:
 	var l := Label.new()
-	l.text = text; l.set_position(pos)
+	l.text = text
+	l.set_position(pos)
 	l.add_theme_font_size_override("font_size", sz)
 	l.add_theme_color_override("font_color", col)
-	add_child(l); return l
+	add_child(l)
+	return l
+
+func _on_pick(idx: int) -> void:
+	_selected_idx = idx
+	_refresh()
+
+func _refresh() -> void:
+	var ch: Dictionary = CHARACTERS[_selected_idx]
+	_name_lbl.text  = ch["name"]
+	_title_lbl.text = ch["title"]
+	_desc_lbl.text  = ch["desc"]
+	_bonus_lbl.text = "Bonus: " + ch["bonus"]
+	_name_lbl.add_theme_color_override("font_color", ch["color"] as Color)
+	# Cycle preview animation
+	_preview.play("idle")
+
+func _on_confirm() -> void:
+	var ch: Dictionary = CHARACTERS[_selected_idx]
+	SaveManager.set_setting("character_class", ch["id"])
+	GameRouter.go_to("world_map")

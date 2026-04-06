@@ -426,10 +426,20 @@ func _build_dialog_box() -> void:
 	_portrait_rect.set_size(Vector2(96, 136))
 	_dialogue_layer.add_child(_portrait_rect)
 
+	# #REGION:CHARACTERS — LPC portrait replaces jimmy portrait
+	var _lpc_portrait: Node2D = load("res://scripts/lpc/CharacterSprite.gd").new()
+	_lpc_portrait.name = "LPCPortrait"
+	_lpc_portrait.position = Vector2(32, 460)
+	_lpc_portrait.scale = Vector2(3.5, 3.5)
+	_lpc_portrait.set_direction(2)
+	_dialogue_layer.add_child(_lpc_portrait)
+	var _saved_look: Dictionary = SaveManager.get_player_appearance()
+	if _saved_look.is_empty():
+		_saved_look = CharacterRandomizer.randomize_character()
+	_lpc_portrait.apply(_saved_look)
+	_lpc_portrait.play("idle")
+	# Keep _portrait_sprite as a dummy to avoid null errors elsewhere
 	_portrait_sprite = Sprite2D.new()
-	_portrait_sprite.position = Vector2(60, 640)
-	_portrait_sprite.scale = Vector2(3.0, 3.0)
-	_portrait_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_dialogue_layer.add_child(_portrait_sprite)
 
 	# Actor name
@@ -476,13 +486,9 @@ func _show_dialogue(idx: int) -> void:
 	# Load portrait
 	var port_tex: Texture2D = null
 	if portrait_key == "jimmy":
-		port_tex = AssetMap.load_tex(AssetMap.JIMMY)
-		if port_tex:
-			_portrait_sprite.texture = port_tex
-			_portrait_sprite.hframes = JIMMY_FRAMES
-			_portrait_sprite.frame   = 0   # neutral frame
-			_portrait_sprite.scale   = Vector2(2.8, 2.8)
-			_portrait_sprite.position = Vector2(60, 630)
+		# LPC portrait is always visible — hide the old sprite slot
+		_portrait_sprite.visible = false
+		return
 	elif portrait_key == "doorman":
 		port_tex = AssetMap.load_tex(
 			"res://assets/codemon/art/character/npc/doorman.png")

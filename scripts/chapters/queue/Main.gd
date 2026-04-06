@@ -74,15 +74,31 @@ func _build_shared() -> void:
 	gate_keeper.level_complete.connect(_on_level_complete)
 
 func _go_tutorial() -> void:
+	# Build game world first so tutorial shows OVER it
+	_build_world_for_tutorial()
+	# Now load tutorial as CanvasLayer on top
 	_load_scene(TUTORIAL_SCENE)
 	var t: Node2D = _active_scene
 	if t:
 		t.level_data = LEVELS[current_level]
 		t.start_requested.connect(_on_tutorial_done)
 
+func _build_world_for_tutorial() -> void:
+	# Build the world background so it shows behind tutorial overlay
+	var world: Node2D = (load("res://scripts/chapters/queue/World.gd") as GDScript).new()
+	world.name = "Q_WorldBehind"
+	world.z_index = -20
+	add_child(world)
+
 func _go_game() -> void:
+	# Remove the world-behind that was shown during tutorial
+	var wb: Node = get_node_or_null("Q_WorldBehind")
+	if wb: wb.queue_free()
 	var cfg: Dictionary = LEVELS[current_level]
 	queue_manager.max_size = cfg["queue_size"] as int
+	# Disconnect before clear to avoid freed-instance crash
+	if queue_manager.queue_changed.is_connected(_on_queue_changed):
+		queue_manager.queue_changed.disconnect(_on_queue_changed)
 	queue_manager.clear()
 	gate_keeper.reset_stats()
 
@@ -97,6 +113,9 @@ func _go_game() -> void:
 		# Reparent DSA panel into the game scene so it draws on top
 		if dsa_panel.get_parent():
 			dsa_panel.reparent(g)
+		# Reconnect signal now that dsa_panel is in the game scene
+		if not queue_manager.queue_changed.is_connected(_on_queue_changed):
+			queue_manager.queue_changed.connect(_on_queue_changed)
 		else:
 			g.add_child(dsa_panel)
 
@@ -133,6 +152,7 @@ func _on_game_over() -> void:
 	GameRouter.go_game_over(CHAPTER_ID)
 
 func _on_queue_changed(snapshot: Array) -> void:
+	if not is_instance_valid(dsa_panel): return
 	dsa_panel.update(snapshot, queue_manager.max_size)
 
 func _on_citizen_arrived(c: Dictionary) -> void:

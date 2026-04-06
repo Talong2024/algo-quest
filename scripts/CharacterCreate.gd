@@ -1,286 +1,178 @@
 extends Node2D
 # ═══════════════════════════════════════════════════
-# CharacterCreate.gd
-# Full character customisation using LPC sprite sheets.
-# Layers: Body → Hair → Face → Shirt → Shoes
-# Gender: Male / Female
-# Saved to SaveManager for use on WorldMap HUD + NPCs.
+# CharacterCreate.gd — LPC Character Creator
+# Player customizes their character using full LPC
+# layered sprites. Appearance saved to SaveManager.
 # ═══════════════════════════════════════════════════
 
-# ── Config ───────────────────────────────────────
-const FRAME_SIZE: int = 16   # 16×18 RPG sheet cells
-const FRAME_W:    int = 16
-const FRAME_H:    int = 18
-const PREVIEW_SCALE: float = 6.0
+const LPC_SPRITE = preload("res://scripts/lpc/CharacterSprite.gd")
 
+# Option data
+const BODY_TYPES:   Array = ["female","male","teen"]
+const BODY_LABELS:  Array = ["Female","Male","Teen"]
+const SKIN_TONES:   Array = ["light","tanned","tanned2","dark","dark2"]
+const SKIN_LABELS:  Array = ["Light","Tanned","Tanned 2","Dark","Dark 2"]
+
+const HAIR_STYLES:  Array = [
+	"","bangs","bangslong","bangsshort","bedhead","long","long_straight",
+	"longhawk","loose","messy1","messy2","page","page2","parted",
+	"pixie","plain","shorthawk","swoop","unkempt",
+	"bangslong2","bunches","high_ponytail","long_tied","ponytail",
+	"ponytail2","princess","shoulderl","shoulderr","single","wavy"
+]
+const HAIR_LABELS:  Array = [
+	"None","Bangs","Bangs Long","Bangs Short","Bedhead","Long","Long Straight",
+	"Long Hawk","Loose","Messy 1","Messy 2","Page","Page 2","Parted",
+	"Pixie","Plain","Short Hawk","Swoop","Unkempt",
+	"Bangs Long 2","Bunches","High Ponytail","Long Tied","Ponytail",
+	"Ponytail 2","Princess","Shoulder L","Shoulder R","Single","Wavy"
+]
 const HAIR_COLORS: Array = [
-	{"name":"Black",  "col":Color("#1a1a1a")},
-	{"name":"Brown",  "col":Color("#5c3d1e")},
-	{"name":"Blonde", "col":Color("#dab84b")},
-	{"name":"Red",    "col":Color("#a02020")},
-	{"name":"White",  "col":Color("#e8e8e8")},
-	{"name":"Blue",   "col":Color("#2040c0")},
+	"ash","black","blonde","blue","carrot","chestnut","dark_brown",
+	"dark_gray","ginger","gold","gray","green","light_brown","navy",
+	"orange","pink","platinum","purple","raven","red","redhead",
+	"rose","sandy","strawberry","violet","white"
 ]
-
-const SKIN_TONES: Array = [
-	{"name":"Light",  "key":"female_light"},
-	{"name":"Olive",  "key":"female_brown"},
-	{"name":"Brown",  "key":"female_amber"},
-	{"name":"Dark",   "key":"female_black"},
-]
-
 const SHIRT_STYLES: Array = [
-	{"name":"Black",  "key":"sleeveless_black"},
-	{"name":"Blue",   "key":"sleeveless_blue"},
-	{"name":"Green",  "key":"sleeveless_green"},
-	{"name":"Red",    "key":"sleeveless_red"},
+	"sleeveless1","sleeveless2","sleeveless2_buttoned","sleeveless2_cardigan",
+	"sleeveless2_polo","sleeveless2_scoop","sleeveless2_vneck"
+]
+const SHIRT_LABELS: Array = ["Basic","Collared","Buttoned","Cardigan","Polo","Scoop Neck","V-Neck"]
+const SHIRT_COLORS: Array = [
+	"black","blue","bluegray","brown","charcoal","forest","gray","green",
+	"lavender","leather","maroon","navy","orange","pink","purple","red",
+	"rose","sky","slate","tan","teal","walnut","white","yellow"
+]
+const LEG_TYPES:   Array = ["","pants/magenta","pants/red","pants/teal","pants/white","skirt/robe","armor/golden","armor/metal"]
+const LEG_LABELS:  Array = ["None","Magenta Pants","Red Pants","Teal Pants","White Pants","Robe Skirt","Golden Greaves","Metal Armor"]
+const SHOE_TYPES:  Array = ["","boots/basic","boots/fold","boots/revised","boots/rimmed","shoes/basic","shoes/ghillies","shoes/revised","shoes/sara","sandals","slippers"]
+const SHOE_LABELS: Array = ["None","Basic Boots","Fold Boots","Revised Boots","Rimmed Boots","Basic Shoes","Ghillie Shoes","Revised Shoes","Sara Shoes","Sandals","Slippers"]
+const SHOE_COLORS: Array = [
+	"black","blue","bluegray","brass","bronze","brown","ceramic","charcoal",
+	"copper","forest","gold","gray","green","iron","lavender","leather",
+	"maroon","navy","orange","pink","purple","red","rose","silver",
+	"sky","slate","steel","tan","teal","walnut","white","yellow"
 ]
 
-# ── State ────────────────────────────────────────
-var _gender:     String = "female"
-var _skin_idx:   int    = 0
-var _hair_idx:   int    = 0
-var _hair_col_idx: int  = 0
-var _shirt_idx:  int    = 0
-var _char_name:  String = ""
+# Current selections
+var _body_idx:   int = 0
+var _skin_idx:   int = 0
+var _hair_idx:   int = 7   # loose
+var _hcol_idx:   int = 1   # black
+var _shirt_idx:  int = 0
+var _scol_idx:   int = 22  # white
+var _leg_idx:    int = 4   # white pants
+var _shoe_idx:   int = 1   # basic boots
+var _shcol_idx:  int = 14  # leather
 
-# Preview sprites
-var _preview_body:  Sprite2D
-var _preview_hair:  Sprite2D
-var _preview_face:  Sprite2D
-var _preview_shirt: Sprite2D
+var _preview: Node2D
+var _anims: Array = ["idle","walk","run","slash","spellcast"]
+var _anim_idx: int = 0
+var _anim_timer: float = 0.0
+var _anim_hold: float = 3.0
 
 func _ready() -> void:
 	_build_ui()
-	_refresh_preview()
+	_build_preview()
+	_refresh()
 
-# #REGION:UI — Character creation panel + preview
+func _build_preview() -> void:
+	_preview = LPC_SPRITE.new()
+	_preview.scale = Vector2(5, 5)
+	# Position: tile top-left is at node position, offset so character is centered
+	# feet at y≈0 from node: -61*scale, center x: -32*scale
+	_preview.position = Vector2(640 - 32*5, 440 - 61*5)
+	add_child(_preview)  # _ready() fires here, THEN apply() will work
+
 func _build_ui() -> void:
 	# Background
 	var bg := ColorRect.new()
-	bg.color = Color("#08080f")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color("#0d0f1a")
+	bg.set_position(Vector2.ZERO)
+	bg.set_size(Vector2(1280, 720))
 	add_child(bg)
 
-	# Street tile BG
-	var tile: Texture2D = AssetMap.load_tex(AssetMap.MAP_TILES["street"])
-	if tile:
-		for row in 4:
-			for col in 4:
-				var s := Sprite2D.new()
-				s.texture = tile; s.position = Vector2(col*384+192, row*320+160)
-				s.modulate = Color(1,1,1,0.10)
-				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				s.z_index = -1; add_child(s)
-
 	# Title
-	_lbl("CHARACTER CREATION", Vector2(40, 20), 22, Color("#4D96FF"))
-	_lbl("Customise your Code Keeper", Vector2(40, 52), 13, Color("#555577"))
+	var title := Label.new()
+	title.text = "Create Your Character"
+	title.set_position(Vector2(480, 16))
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_color_override("font_color", Color("#FFD93D"))
+	add_child(title)
 
-	# ── Preview panel (centre) ──────────────────
-	var prev_bg := ColorRect.new()
-	prev_bg.color = Color("#13131f")
-	prev_bg.set_position(Vector2(500, 60))
-	prev_bg.set_size(Vector2(280, 400))
-	add_child(prev_bg)
-	_lbl("Preview", Vector2(590, 70), 13, Color("#888899"))
+	# Left column — body/hair/shirt
+	_make_section("BODY TYPE",  Vector2(30, 70),  BODY_LABELS,  func(i): _body_idx=i; _refresh())
+	_make_section("SKIN TONE",  Vector2(30, 150), SKIN_LABELS,  func(i): _skin_idx=i; _refresh())
+	_make_section("HAIR STYLE", Vector2(30, 230), HAIR_LABELS,  func(i): _hair_idx=i; _refresh())
+	_make_section("HAIR COLOR", Vector2(30, 310), HAIR_COLORS,  func(i): _hcol_idx=i; _refresh(), true)
+	_make_section("SHIRT",      Vector2(30, 390), SHIRT_LABELS, func(i): _shirt_idx=i; _refresh())
+	_make_section("SHIRT COLOR",Vector2(30, 470), SHIRT_COLORS, func(i): _scol_idx=i; _refresh(), true)
 
-	# Preview sprites stacked
-	_preview_body  = _make_preview_sprite(Vector2(640, 270))
-	_preview_face  = _make_preview_sprite(Vector2(640, 270))
-	_preview_hair  = _make_preview_sprite(Vector2(640, 270))
-	_preview_shirt = _make_preview_sprite(Vector2(640, 270))
-
-	# ── Left panel: customisation ───────────────
-	var panel := ColorRect.new()
-	panel.color = Color("#0d0d1a")
-	panel.set_position(Vector2(40, 80))
-	panel.set_size(Vector2(440, 560))
-	add_child(panel)
-
-	var py: float = 100.0
-
-	# Gender
-	_section_lbl("Gender", 60.0, py)
-	py += 28.0
-	_toggle_btn("Female", Vector2(60, py), func(): _set_gender("female"), _gender == "female")
-	_toggle_btn("Male",   Vector2(200, py), func(): _set_gender("male"), _gender == "male")
-	py += 52.0
-
-	# Name
-	_section_lbl("Name", 60.0, py)
-	py += 28.0
-	var name_field := LineEdit.new()
-	name_field.placeholder_text = "Enter your name..."
-	name_field.set_position(Vector2(60, py))
-	name_field.set_size(Vector2(340, 38))
-	name_field.add_theme_font_size_override("font_size", 14)
-	name_field.text_changed.connect(func(t): _char_name = t)
-	add_child(name_field)
-	py += 52.0
-
-	# Skin tone
-	_section_lbl("Skin Tone", 60.0, py)
-	py += 28.0
-	for i in SKIN_TONES.size():
-		var info: Dictionary = SKIN_TONES[i] as Dictionary
-		var ci := i
-		_radio_btn(info["name"] as String, Vector2(60 + i * 100, py),
-			func(): _skin_idx = ci; _refresh_preview())
-	py += 52.0
-
-	# Hair style
-	_section_lbl("Hair Style", 60.0, py)
-	py += 28.0
-	_arrow_row("Hair", 0, 2, Vector2(60, py), 320.0,
-		func(): _hair_idx = (_hair_idx - 1 + 4) % 4; _refresh_preview(),
-		func(): _hair_idx = (_hair_idx + 1) % 4; _refresh_preview(),
-		func(): return "Style %d" % (_hair_idx + 1))
-	py += 52.0
-
-	# Hair colour
-	_section_lbl("Hair Colour", 60.0, py)
-	py += 28.0
-	for i in HAIR_COLORS.size():
-		var info: Dictionary = HAIR_COLORS[i] as Dictionary
-		var ci := i
-		var dot := Button.new()
-		dot.set_position(Vector2(60 + i * 62, py))
-		dot.set_size(Vector2(50, 28))
-		dot.add_theme_color_override("font_color", info["col"] as Color)
-		dot.text = "■"
-		dot.pressed.connect(func(): _hair_col_idx = ci; _refresh_preview())
-		add_child(dot)
-	py += 52.0
-
-	# Shirt
-	_section_lbl("Shirt", 60.0, py)
-	py += 28.0
-	for i in SHIRT_STYLES.size():
-		var info: Dictionary = SHIRT_STYLES[i] as Dictionary
-		var ci := i
-		_radio_btn(info["name"] as String, Vector2(60 + i * 100, py),
-			func(): _shirt_idx = ci; _refresh_preview())
-	py += 60.0
+	# Right column — legs/shoes
+	_make_section("LEGS",       Vector2(820, 70),  LEG_LABELS,  func(i): _leg_idx=i; _refresh())
+	_make_section("FOOTWEAR",   Vector2(820, 150), SHOE_LABELS, func(i): _shoe_idx=i; _refresh())
+	_make_section("SHOE COLOR", Vector2(820, 230), SHOE_COLORS, func(i): _shcol_idx=i; _refresh(), true)
 
 	# Confirm button
-	var confirm: Button = AssetMap.make_codemon_button("✓  Create Character", Vector2(340, 52))
-	confirm.set_position(Vector2(60, py))
-	confirm.pressed.connect(_confirm)
-	add_child(confirm)
+	var confirm := _make_btn("Confirm & Continue", Vector2(490, 640), Vector2(300, 50))
+	confirm.pressed.connect(_on_confirm)
+	confirm.add_theme_color_override("font_color", Color("#FFD93D"))
+	confirm.add_theme_font_size_override("font_size", 18)
 
-	# Back button
-	var back: Button = AssetMap.make_codemon_button("← Back", Vector2(160, 40))
-	back.set_position(Vector2(1080, 660))
-	back.pressed.connect(func(): GameRouter.go_auth_screen())
-	add_child(back)
+func _make_section(label_text: String, pos: Vector2, options: Array, on_change: Callable, capitalize: bool = false) -> void:
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.set_position(pos)
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", Color("#7799aa"))
+	add_child(lbl)
 
-# ══════════════════════════════════════════════════
-# Preview
-# ══════════════════════════════════════════════════
-# #REGION:PREVIEW — Updates stacked LPC sprites
-func _refresh_preview() -> void:
-	# Body
-	var body_tex: Texture2D = AssetMap.load_tex(AssetMap.LPC_BODIES.get("bodies_1",""))
-	if body_tex and is_instance_valid(_preview_body):
-		_preview_body.texture = body_tex
-		_preview_body.hframes = 20; _preview_body.vframes = 22
-		_preview_body.frame   = 0
+	var btn := OptionButton.new()
+	btn.set_position(pos + Vector2(0, 18))
+	btn.set_size(Vector2(380, 32))
+	btn.add_theme_font_size_override("font_size", 12)
+	for opt in options:
+		var s: String = str(opt)
+		btn.add_item(s.capitalize() if capitalize else s)
+	btn.item_selected.connect(on_change)
+	add_child(btn)
 
-	# Face
-	var skin: Dictionary  = SKIN_TONES[_skin_idx] as Dictionary
-	var face_key: String  = skin["key"] as String
-	var face_path: String = AssetMap.LPC_FACES.get(face_key, "") as String
-	var face_tex: Texture2D = AssetMap.load_tex(face_path)
-	if face_tex and is_instance_valid(_preview_face):
-		_preview_face.texture = face_tex
-		_preview_face.hframes = 8; _preview_face.vframes = 8
-		_preview_face.frame   = 0
+func _make_btn(text: String, pos: Vector2, sz: Vector2) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.set_position(pos)
+	b.set_size(sz)
+	add_child(b)
+	return b
 
-	# Hair tint
-	var hair_col: Color = (HAIR_COLORS[_hair_col_idx] as Dictionary)["col"] as Color
-	if is_instance_valid(_preview_hair):
-		var hair_key: String  = "male_1" if _gender == "male" else "female_1"
-		var hair_tex: Texture2D = AssetMap.load_tex(AssetMap.LPC_HAIR.get(hair_key,""))
-		if hair_tex:
-			_preview_hair.texture  = hair_tex
-			_preview_hair.modulate = hair_col
-			_preview_hair.hframes  = 32; _preview_hair.vframes = 25
-			_preview_hair.frame    = _hair_idx
+func _get_appearance() -> Dictionary:
+	return {
+		"body_type":   BODY_TYPES[_body_idx],
+		"skin_tone":   SKIN_TONES[_skin_idx],
+		"hair_style":  HAIR_STYLES[_hair_idx],
+		"hair_color":  HAIR_COLORS[_hcol_idx],
+		"shirt_style": SHIRT_STYLES[_shirt_idx],
+		"shirt_color": SHIRT_COLORS[_scol_idx],
+		"leg_type":    LEG_TYPES[_leg_idx],
+		"shoe_type":   SHOE_TYPES[_shoe_idx],
+		"shoe_color":  SHOE_COLORS[_shcol_idx],
+		"sock_type":   "",
+		"sock_color":  "",
+	}
 
-	# Shirt
-	var shirt: Dictionary  = SHIRT_STYLES[_shirt_idx] as Dictionary
-	var shirt_path: String = AssetMap.LPC_SHIRTS.get(shirt["key"] as String, "") as String
-	var shirt_tex: Texture2D = AssetMap.load_tex(shirt_path)
-	if shirt_tex and is_instance_valid(_preview_shirt):
-		_preview_shirt.texture = shirt_tex
-		_preview_shirt.hframes = 13; _preview_shirt.vframes = 4
-		_preview_shirt.frame   = 0
+func _refresh() -> void:
+	_preview.apply(_get_appearance())
+	_preview.play("idle")
+	_preview.set_direction(2)
 
-# #REGION:LPC — Creates one layer of character preview
-func _make_preview_sprite(pos: Vector2) -> Sprite2D:
-	var s := Sprite2D.new()
-	s.position       = pos
-	s.scale          = Vector2(PREVIEW_SCALE, PREVIEW_SCALE)
-	s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	s.z_index        = 5
-	add_child(s)
-	return s
+func _process(delta: float) -> void:
+	_anim_timer += delta
+	if _anim_timer >= _anim_hold:
+		_anim_timer = 0.0
+		_anim_idx = (_anim_idx + 1) % _anims.size()
+		_preview.play(_anims[_anim_idx])
 
-# ══════════════════════════════════════════════════
-# Confirm
-# ══════════════════════════════════════════════════
-func _confirm() -> void:
-	var final_name: String = _char_name.strip_edges()
-	if final_name.is_empty():
-		final_name = "Code Keeper"
-	ProgressTracker.set_player_name(final_name)
-	var skin: Dictionary = SKIN_TONES[_skin_idx] as Dictionary
-	var shirt: Dictionary = SHIRT_STYLES[_shirt_idx] as Dictionary
-	var hair_col: Dictionary = HAIR_COLORS[_hair_col_idx] as Dictionary
-	SaveManager.set_setting("char_gender",   _gender)
-	SaveManager.set_setting("char_skin",     skin["key"] as String)
-	SaveManager.set_setting("char_hair_idx", _hair_idx)
-	SaveManager.set_setting("char_hair_col", (hair_col["col"] as Color).to_html())
-	SaveManager.set_setting("char_shirt",    shirt["key"] as String)
-	GameRouter.go_char_select()
-
-# ══════════════════════════════════════════════════
-# UI helpers
-# ══════════════════════════════════════════════════
-func _set_gender(g: String) -> void:
-	_gender = g; _refresh_preview()
-
-func _lbl(text: String, pos: Vector2, sz: int, col: Color) -> Label:
-	var l := Label.new(); l.text = text; l.set_position(pos)
-	l.add_theme_font_size_override("font_size", sz)
-	l.add_theme_color_override("font_color", col)
-	add_child(l); return l
-
-func _section_lbl(text: String, x: float, y: float) -> void:
-	_lbl(text, Vector2(x, y), 13, Color("#888899"))
-
-func _toggle_btn(text: String, pos: Vector2, cb: Callable, _active: bool) -> Button:
-	var b: Button = AssetMap.make_codemon_button(text, Vector2(120, 36))
-	b.set_position(pos); b.pressed.connect(cb); add_child(b); return b
-
-func _radio_btn(text: String, pos: Vector2, cb: Callable) -> Button:
-	var b: Button = AssetMap.make_codemon_button(text, Vector2(88, 32))
-	b.set_position(pos); b.pressed.connect(cb); add_child(b); return b
-
-func _arrow_row(_label: String, _min: int, _max: int, pos: Vector2, width: float,
-		cb_prev: Callable, cb_next: Callable, get_text: Callable) -> void:
-	var prev: Button = AssetMap.make_codemon_button("◀", Vector2(36, 32))
-	prev.set_position(pos); prev.pressed.connect(cb_prev); add_child(prev)
-	var val := Label.new()
-	val.set_position(pos + Vector2(44, 4))
-	val.set_size(Vector2(width - 88, 28))
-	val.add_theme_font_size_override("font_size", 13)
-	val.add_theme_color_override("font_color", Color("#e8e8f0"))
-	val.text = get_text.call() as String
-	add_child(val)
-	var nxt: Button = AssetMap.make_codemon_button("▶", Vector2(36, 32))
-	nxt.set_position(pos + Vector2(width - 36, 0))
-	nxt.pressed.connect(func(): cb_next.call(); val.text = get_text.call() as String)
-	prev.pressed.connect(func(): val.text = get_text.call() as String)
-	add_child(nxt)
+func _on_confirm() -> void:
+	var appearance: Dictionary = _get_appearance()
+	SaveManager.set_player_appearance(appearance)
+	GameRouter.go_to("char_select")

@@ -1,149 +1,126 @@
 extends Node2D
 # ═══════════════════════════════════════════════════
-# SSIntro.gd  —  "Syntax Squad" logo splash
-#
-# Plays ONCE on very first app launch (before main menu).
-# Recreates the codemon bracket animation with:
-#   [SS] instead of [DK]
-# Letter S tumbles in from left, second S from right,
-# then "SYNTAX SQUAD" text fades in below brackets.
-# Total: ~4 seconds → fades to MainMenu.
-# Skippable with Space / Enter / click.
+# SSIntro.gd — Syntax Squad logo splash
+# Uses AnimationPlayer for the bracket + letter reveal.
+# Inspired by: youtube.com/watch?v=zovnfSytasI
+#   - Fast bracket slam from sides
+#   - Letters bounce in
+#   - Title fade + scale
+#   - Hold → fade to black → MainMenu
 # ═══════════════════════════════════════════════════
 
-var _skipped: bool   = false
-var _on_done: Callable
+var _skipped: bool = false
+
+# #REGION:LOGO — Node refs from SSIntro.tscn
+@onready var _logo_group:   Node2D         = $LogoGroup
+@onready var _bracket_l:    Sprite2D       = $LogoGroup/BracketLeft
+@onready var _bracket_r:    Sprite2D       = $LogoGroup/BracketRight
+@onready var _letter_s1:    Label          = $LogoGroup/LetterS1
+@onready var _letter_s2:    Label          = $LogoGroup/LetterS2
+@onready var _title_lbl:    Label          = $LogoGroup/TitleLabel
+@onready var _presents_lbl: Label          = $LogoGroup/PresentsLabel
+@onready var _fade_overlay: ColorRect      = $FadeOverlay
+@onready var _stars_node:   Node2D         = $Stars
+@onready var _anim:         AnimationPlayer = $AnimationPlayer
 
 func _ready() -> void:
-	_build()
+	_load_bracket_texture()
+	_add_stars()
+	_build_and_play_animation()
 
-func start(on_done: Callable) -> void:
-	_on_done = on_done
+# #REGION:LOGO — Load bracket from AssetMap
+func _load_bracket_texture() -> void:
+	var tex: Texture2D = AssetMap.load_tex(AssetMap.LOGO_BRACKET)
+	if tex:
+		_bracket_l.texture = tex
+		_bracket_r.texture = tex
 
-func _build() -> void:
-	# Black background
-	var bg := ColorRect.new()
-	bg.color = Color("#050508")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	# Fade overlay
-	var ov := ColorRect.new()
-	ov.name = "Overlay"
-	ov.color = Color(0, 0, 0, 0)
-	ov.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	ov.z_index = 100
-	add_child(ov)
-
-	_add_stars(bg)
-	_animate()
-
-# #REGION:BACKGROUND — Star particle decorations
-func _add_stars(parent: Node) -> void:
-	var rng := RandomNumberGenerator.new(); rng.seed = 77
+# #REGION:BACKGROUND — Procedural star field
+func _add_stars() -> void:
+	var rng := RandomNumberGenerator.new(); rng.seed = 1337
 	for _i in 80:
 		var s := ColorRect.new()
 		var b: float = rng.randf_range(0.3, 1.0)
 		s.color = Color(b, b, b * 1.1, rng.randf_range(0.3, 0.9))
-		s.set_position(Vector2(rng.randf_range(0,1280), rng.randf_range(0,720)))
-		var sz: float = rng.randf_range(1.0, 3.0)
+		s.set_position(Vector2(rng.randf_range(0, 1280), rng.randf_range(0, 720)))
+		var sz: float = rng.randf_range(1.5, 3.5)
 		s.set_size(Vector2(sz, sz))
-		parent.add_child(s)
+		_stars_node.add_child(s)
 
-# #REGION:LOGO — [SS] bracket logo animation sequence
-func _animate() -> void:
-	# ── Bracket sprites ──────────────────────────
-	var br_tex: Texture2D = AssetMap.load_tex(AssetMap.LOGO_BRACKET)
+# #REGION:ANIMATION — Build AnimationPlayer tracks programmatically
+# Bracket slam → letter bounce → title reveal → hold → fade out
+func _build_and_play_animation() -> void:
+	var anim := Animation.new()
+	anim.length = 4.2
 
-	var bracket_l := Sprite2D.new()
-	bracket_l.texture        = br_tex
-	bracket_l.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	bracket_l.position       = Vector2(-120, 360)
-	bracket_l.scale          = Vector2(2.2, 2.2)
-	bracket_l.rotation_degrees = -18.0
-	add_child(bracket_l)
+	# ── Logo group fade in ─────────────────────────
+	var t_logo_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_logo_a, "LogoGroup:modulate:a")
+	anim.track_insert_key(t_logo_a, 0.0, 0.0)
+	anim.track_insert_key(t_logo_a, 0.05, 1.0)
 
-	var bracket_r := Sprite2D.new()
-	bracket_r.texture        = br_tex
-	bracket_r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	bracket_r.position       = Vector2(1400, 360)
-	bracket_r.scale          = Vector2(2.2, 2.2)
-	bracket_r.flip_h         = true
-	add_child(bracket_r)
+	# ── Bracket left: slides from off-screen-left ──
+	var t_bl_x: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_bl_x, "LogoGroup/BracketLeft:position:x")
+	anim.track_set_interpolation_type(t_bl_x, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_bl_x, 0.0,  -480.0)
+	anim.track_insert_key(t_bl_x, 0.38, -260.0)
+	anim.track_insert_key(t_bl_x, 0.44, -240.0)
+	anim.track_insert_key(t_bl_x, 0.50, -260.0)
 
-	# ── "S" letters (drawn as Labels since we don't have letter sprites) ──
-	var letter_s1 := _make_letter("S", Vector2(-140, 240))
-	var letter_s2 := _make_letter("S", Vector2(1420, 240))
+	# ── Bracket right: slides from off-screen-right ─
+	var t_br_x: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_br_x, "LogoGroup/BracketRight:position:x")
+	anim.track_set_interpolation_type(t_br_x, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_br_x, 0.0,   480.0)
+	anim.track_insert_key(t_br_x, 0.38,  260.0)
+	anim.track_insert_key(t_br_x, 0.44,  240.0)
+	anim.track_insert_key(t_br_x, 0.50,  260.0)
 
-	# ── Subtitle labels ───────────────────────────
-	var title_lbl := Label.new()
-	title_lbl.text = "SYNTAX SQUAD"
-	title_lbl.set_position(Vector2(340, 430))
-	title_lbl.add_theme_font_size_override("font_size", 42)
-	title_lbl.add_theme_color_override("font_color", Color("#4D96FF"))
-	title_lbl.modulate.a = 0.0
-	add_child(title_lbl)
+	# ── Letter S1: drops from above + bounces ──────
+	var t_s1_y: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_s1_y, "LogoGroup/LetterS1:position:y")
+	anim.track_set_interpolation_type(t_s1_y, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_s1_y, 0.35, -200.0)
+	anim.track_insert_key(t_s1_y, 0.58,  -70.0)
+	anim.track_insert_key(t_s1_y, 0.64,  -55.0)
+	anim.track_insert_key(t_s1_y, 0.70,  -70.0)
 
-	var sub_lbl := Label.new()
-	sub_lbl.text = "presents"
-	sub_lbl.set_position(Vector2(560, 488))
-	sub_lbl.add_theme_font_size_override("font_size", 18)
-	sub_lbl.add_theme_color_override("font_color", Color("#555577"))
-	sub_lbl.modulate.a = 0.0
-	add_child(sub_lbl)
+	# ── Letter S2: drops from above ────────────────
+	var t_s2_y: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_s2_y, "LogoGroup/LetterS2:position:y")
+	anim.track_set_interpolation_type(t_s2_y, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_s2_y, 0.40, -200.0)
+	anim.track_insert_key(t_s2_y, 0.62,  -70.0)
+	anim.track_insert_key(t_s2_y, 0.68,  -55.0)
+	anim.track_insert_key(t_s2_y, 0.74,  -70.0)
 
-	var skip_lbl := Label.new()
-	skip_lbl.text = "Press SPACE or click to skip"
-	skip_lbl.set_position(Vector2(450, 680))
-	skip_lbl.add_theme_font_size_override("font_size", 12)
-	skip_lbl.add_theme_color_override("font_color", Color("#222233"))
-	add_child(skip_lbl)
+	# ── Title: fade in + scale up ──────────────────
+	var t_title_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_title_a, "LogoGroup/TitleLabel:modulate:a")
+	anim.track_insert_key(t_title_a, 0.7, 0.0)
+	anim.track_insert_key(t_title_a, 1.0, 1.0)
 
-	# ── Animation sequence ───────────────────────
-	_run_sequence(bracket_l, bracket_r, letter_s1, letter_s2, title_lbl, sub_lbl)
+	var t_pres_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_pres_a, "LogoGroup/PresentsLabel:modulate:a")
+	anim.track_insert_key(t_pres_a, 0.9, 0.0)
+	anim.track_insert_key(t_pres_a, 1.2, 1.0)
 
-func _make_letter(ch: String, pos: Vector2) -> Label:
-	var l := Label.new()
-	l.text = ch
-	l.set_position(pos)
-	l.add_theme_font_size_override("font_size", 120)
-	l.add_theme_color_override("font_color", Color("#4D96FF"))
-	add_child(l)
-	return l
+	# ── Hold, then fade to black ───────────────────
+	var t_fade: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_fade, "FadeOverlay:color:a")
+	anim.track_insert_key(t_fade, 0.0,  0.0)
+	anim.track_insert_key(t_fade, 3.4,  0.0)
+	anim.track_insert_key(t_fade, 4.1,  1.0)
 
-func _run_sequence(bl, br, sl, sr, title, sub) -> void:
-	# 0.0s — brackets + letters fly in
-	var p1 := create_tween().set_parallel(true)
-	p1.tween_property(bl, "position", Vector2(270, 360), 0.55).set_trans(Tween.TRANS_BACK)
-	p1.tween_property(bl, "rotation_degrees", 0.0, 0.55).set_trans(Tween.TRANS_EXPO)
-	p1.tween_property(br, "position", Vector2(950, 360), 0.55).set_trans(Tween.TRANS_BACK)
-	p1.tween_property(sl, "position", Vector2(370, 240), 0.55).set_trans(Tween.TRANS_BACK)
-	p1.tween_property(sl, "rotation_degrees", 0.0, 0.55)
-	p1.tween_property(sr, "position", Vector2(740, 240), 0.55).set_trans(Tween.TRANS_BACK)
-	p1.tween_property(sr, "rotation_degrees", 0.0, 0.55)
-	await get_tree().create_timer(0.6).timeout
+	# Register and play
+	var lib := AnimationLibrary.new()
+	lib.add_animation("intro", anim)
+	_anim.add_animation_library("", lib)
+	_anim.animation_finished.connect(_on_anim_finished)
+	_anim.play("intro")
 
-	# 0.6s — letters wiggle
-	var wig := create_tween().set_parallel(true)
-	wig.tween_property(sl, "rotation_degrees", 10.0, 0.14).set_trans(Tween.TRANS_SINE)
-	wig.tween_property(sr, "rotation_degrees", -10.0, 0.14).set_trans(Tween.TRANS_SINE)
-	await get_tree().create_timer(0.15).timeout
-	var wig2 := create_tween().set_parallel(true)
-	wig2.tween_property(sl, "rotation_degrees", 0.0, 0.14).set_trans(Tween.TRANS_SINE)
-	wig2.tween_property(sr, "rotation_degrees", 0.0, 0.14).set_trans(Tween.TRANS_SINE)
-	await get_tree().create_timer(0.2).timeout
-
-	# 0.95s — title + sub fade in
-	var ft := create_tween().set_parallel(true)
-	ft.tween_property(title, "modulate:a", 1.0, 0.5)
-	ft.tween_property(sub,   "modulate:a", 1.0, 0.4)
-	await get_tree().create_timer(1.6).timeout
-
-	# 2.55s — hold then fade out everything
-	var fo := create_tween()
-	fo.tween_property(self, "modulate:a", 0.0, 0.7)
-	await fo.finished
-
+func _on_anim_finished(_name: StringName) -> void:
 	_finish()
 
 func _input(event: InputEvent) -> void:
@@ -151,21 +128,19 @@ func _input(event: InputEvent) -> void:
 	var hit: bool = false
 	if event is InputEventKey:
 		var ke := event as InputEventKey
-		if ke.pressed and (ke.keycode == KEY_SPACE or ke.keycode == KEY_ENTER
-				or ke.keycode == KEY_ESCAPE):
+		if ke.pressed and ke.keycode in [KEY_SPACE, KEY_ENTER, KEY_ESCAPE]:
 			hit = true
 	if event is InputEventMouseButton:
-		var mb := event as InputEventMouseButton
-		if mb.pressed: hit = true
-	if hit:
-		_skipped = true
-		var fo := create_tween()
-		fo.tween_property(self, "modulate:a", 0.0, 0.3)
-		await fo.finished
-		_finish()
+		if (event as InputEventMouseButton).pressed: hit = true
+	if hit: _skip()
+
+func _skip() -> void:
+	if _skipped: return
+	_skipped = true
+	_anim.stop()
+	var tw := create_tween()
+	tw.tween_property(_fade_overlay, "color:a", 1.0, 0.3)
+	tw.tween_callback(_finish)
 
 func _finish() -> void:
-	if _on_done.is_valid():
-		_on_done.call()
-	else:
-		GameRouter.go_main_menu()
+	GameRouter.go_main_menu()

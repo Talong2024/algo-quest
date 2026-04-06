@@ -164,15 +164,20 @@ func _spawn_citizen_node(c: Dictionary) -> void:
 
 	# Enable input — needs an Area2D or CollisionShape for _input_event
 	# We use a simpler approach: direct mouse button checking in _process
-	node.setup(c, SPAWN_Y, SPAWN_Y)
 	node.position = Vector2(LANE_X, SPAWN_Y)
 	node.z_index = 10
 
-	# Connect click via Area2D pattern using simple input detection
+	# Connect click BEFORE add_child
 	var cid: int = c["id"] as int
 	node.clicked.connect(func(id: int): emit_signal("citizen_clicked", id))
 
-	# Add CollisionShape so _input_event fires
+	# add_child FIRST so CitizenNode._ready() fires and builds _char_sprite
+	add_child(node)
+
+	# NOW setup — _ready() has run, _char_sprite exists, appearance will load
+	node.setup(c, SPAWN_Y, SPAWN_Y)
+
+	# Click area added after everything is ready
 	var area := Area2D.new()
 	var shape := CollisionShape2D.new()
 	var circle := CircleShape2D.new()
@@ -187,8 +192,6 @@ func _spawn_citizen_node(c: Dictionary) -> void:
 					emit_signal("citizen_clicked", cid)
 	)
 	node.add_child(area)
-
-	add_child(node)
 	_citizen_nodes[cid] = node
 
 func _reposition_all_citizens() -> void:

@@ -29,6 +29,8 @@ FirebaseManager="*res://scripts/autoload/FirebaseManager.gd"
 AudioManager="*res://scripts/autoload/AudioManager.gd"
 ProgressTracker="*res://scripts/autoload/ProgressTracker.gd"
 SpriteHelper="*res://scripts/shared/SpriteHelper.gd"
+CharacterData="*res://scripts/lpc/CharacterData.gd"
+CharacterRandomizer="*res://scripts/lpc/CharacterRandomizer.gd"
 
 [display]
 

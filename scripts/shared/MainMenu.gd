@@ -1,145 +1,156 @@
 extends Node2D
-# MainMenu with video background + SS Syntax Squad branding
+# ═══════════════════════════════════════════════════
+# MainMenu.gd
+# #REGION:UI — AlgoQuest main menu
+# Inspired by: youtube.com/watch?v=zovnfSytasI
+#   - Video/animated background
+#   - Title slides up and fades in via AnimationPlayer
+#   - Buttons stagger in after title
+#   - Fade-in from black on entry
+#   - Fade-to-black before scene change
+# ═══════════════════════════════════════════════════
 
-var _buttons: Array = []
+# #REGION:UI — Node refs from MainMenu.tscn
+@onready var _title_lbl:   Label          = $UI/TitleGroup/TitleLabel
+@onready var _title_glow:  Label          = $UI/TitleGroup/TitleGlow
+@onready var _subtitle:    Label          = $UI/TitleGroup/SubtitleLabel
+@onready var _menu_panel:  PanelContainer = $UI/MenuPanel
+@onready var _panel_accent:ColorRect      = $UI/PanelAccent
+@onready var _btn_container:VBoxContainer = $UI/MenuPanel/ButtonContainer
+@onready var _fade:        ColorRect      = $UI/FadeOverlay
+@onready var _video_bg:    Node2D         = $VideoBackground
+@onready var _anim:        AnimationPlayer = $AnimationPlayer
 
 func _ready() -> void:
-	_build_video_bg()
-	_build_ui()
-	_reveal_title()
+	_load_video_background()
+	_build_menu_buttons()
+	_build_and_play_intro_animation()
 	AudioManager.play_bgm("menu")
 
-# #REGION:VIDEO — Main menu animated background
-func _build_video_bg() -> void:
-	# Try .ogv first (Godot 4 native), then .mp4 (needs GodotFFmpeg plugin)
-	# To convert: ffmpeg -i main_menu_bg.mp4 -c:v libtheora -q:v 7 -c:a libvorbis main_menu_bg.ogv
-	var paths: Array = [
-		"res://assets/video/main_menu_bg.ogv",
-		"res://assets/video/main_menu_bg.mp4",
-		AssetMap.MENU_BG_VIDEO,
-	]
-	for video_path in paths:
-		if not FileAccess.file_exists(video_path as String): continue
-		# Use push_error suppression - mp4 gives "No loader found" error which is expected
-		var stream: Resource = null
-		if (video_path as String).ends_with(".ogv"):
-			stream = load(video_path as String)
-		else:
-			# MP4 requires GodotFFmpeg plugin - skip silently if unavailable
-			continue
-		if stream == null: continue
-		if not (stream is VideoStream): continue
-		var vp := VideoStreamPlayer.new()
-		vp.stream   = stream as VideoStream
-		vp.autoplay = true
-		vp.loop     = true
-		vp.expand   = true
-		vp.z_index  = -10
-		vp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		add_child(vp)
-		return
-	_fallback_bg()
-
-	var vign := ColorRect.new()
-	vign.color = Color(0.0, 0.0, 0.05, 0.62)
-	vign.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	vign.z_index = -8
-	add_child(vign)
-
-# #REGION:VIDEO:FALLBACK — Street tile bg when video unavailable
-func _fallback_bg() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color("#060612")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.z_index = -10
-	add_child(bg)
+# ══════════════════════════════════════════════════
+# #REGION:VIDEO — Try to load .ogv background video
+# ══════════════════════════════════════════════════
+func _load_video_background() -> void:
+	var ogv_path: String = "res://assets/video/main_menu_bg.ogv"
+	if FileAccess.file_exists(ogv_path):
+		var stream: Resource = load(ogv_path)
+		if stream is VideoStream:
+			var vp := VideoStreamPlayer.new()
+			vp.stream   = stream as VideoStream
+			vp.autoplay = true; vp.loop = true; vp.expand = true
+			vp.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			_video_bg.add_child(vp)
+			return
+	# Fallback: tile the street map
 	var tile: Texture2D = AssetMap.load_tex(AssetMap.MAP_TILES["street"])
 	if tile:
-		for row in 4:
+		for row in 3:
 			for col in 4:
 				var s := Sprite2D.new()
 				s.texture = tile; s.position = Vector2(col*384+192, row*320+160)
-				s.modulate = Color(1,1,1,0.14)
+				s.modulate = Color(1,1,1,0.18)
 				s.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				s.z_index = -9; add_child(s)
+				_video_bg.add_child(s)
 
-# #REGION:UI — Title, buttons, panel layout
-func _build_ui() -> void:
-	# Title
-	var glow := _lbl("ALGOQUEST", Vector2(183, 143), 88, Color(0.1,0.3,0.8,0.3))
-	glow.name = "TitleGlow"; glow.modulate.a = 0.0
-	var title := _lbl("ALGOQUEST", Vector2(180, 140), 88, Color("#4D96FF"))
-	title.name = "Title"; title.modulate.a = 0.0; title.position.y = 190.0
-	var sub := _lbl("Data Structures & Algorithms", Vector2(248, 252), 20, Color("#888899"))
-	sub.name = "Sub"; sub.modulate.a = 0.0
-
-	# Left panel
-	var panel := ColorRect.new()
-	panel.color = Color(0.05, 0.03, 0.12, 0.78)
-	panel.set_position(Vector2(80, 330)); panel.set_size(Vector2(300, 310))
-	add_child(panel)
-	var bar := ColorRect.new()
-	bar.color = Color("#4D96FF")
-	bar.set_position(Vector2(80, 330)); bar.set_size(Vector2(3, 310))
-	add_child(bar)
-
-	# Buttons
-	var has_save: bool = ProgressTracker.get_player_name() != ""
-	var by: float = 355.0
-	const BW: float = 260.0; const BH: float = 46.0; const BG: float = 56.0
+# ══════════════════════════════════════════════════
+# #REGION:BUTTONS — Build codemon-styled buttons
+# ══════════════════════════════════════════════════
+func _build_menu_buttons() -> void:
+	var has_save: bool = SaveManager.get_setting("char_variant","") != ""
 
 	if has_save:
-		_add_btn("▶  Continue",  Vector2(100, by), Vector2(BW,BH), func(): GameRouter.go_auth_screen()); by += BG
-		_add_btn("🆕  New Game", Vector2(100, by), Vector2(BW,BH), func():
-			ProgressTracker.reset_all(); GameRouter.go_auth_screen()); by += BG
+		_add_btn("▶  Continue",    func(): _go_to(GameRouter.go_auth_screen))
+		_add_btn("🆕  New Game",   func():
+			SaveManager.set_setting("char_variant","")
+			ProgressTracker.reset_all()
+			_go_to(GameRouter.go_auth_screen))
 	else:
-		_add_btn("▶  Play",     Vector2(100, by), Vector2(BW,BH), func(): GameRouter.go_auth_screen()); by += BG
+		_add_btn("▶  Play",        func(): _go_to(GameRouter.go_auth_screen))
 
-	_add_btn("⚙  Settings",    Vector2(100, by), Vector2(BW,BH), func(): GameRouter.go_settings()); by += BG
-	_add_btn("★  Credits",     Vector2(100, by), Vector2(BW,BH), func(): GameRouter.go_credits()); by += BG
-	_add_btn("Change Character",Vector2(100, by), Vector2(BW,BH), func(): GameRouter.go_char_select())
+	_add_btn("⚙  Settings",       func(): _go_to(GameRouter.go_settings))
+	_add_btn("★  Credits",        func(): _go_to(GameRouter.go_credits))
 
-	# Branding
-	_lbl("v0.1  ·  A Syntax Squad Game", Vector2(900, 694), 11, Color("#333355"))
-	_lbl("Press ESC to quit", Vector2(20, 694), 11, Color("#222233"))
+func _add_btn(text: String, cb: Callable) -> void:
+	var b: Button = AssetMap.make_codemon_button(text, Vector2(260, 46))
+	b.modulate = Color(1, 1, 1, 0)   # starts invisible, animated in
+	b.pressed.connect(cb)
+	_btn_container.add_child(b)
 
-# #REGION:BUTTONS — Creates codemon-styled menu button
-func _add_btn(text: String, pos: Vector2, sz: Vector2, cb: Callable) -> void:
-	var b: Button = AssetMap.make_codemon_button(text, sz)
-	b.set_position(pos); b.modulate.a = 0.0; b.pressed.connect(cb)
-	add_child(b); _buttons.append(b)
+func _go_to(fn: Callable) -> void:
+	# Fade to black then call the routing function
+	var tw := create_tween()
+	tw.tween_property(_fade, "color:a", 1.0, 0.35)
+	tw.tween_callback(fn)
 
-func _lbl(text: String, pos: Vector2, sz: int, col: Color) -> Label:
-	var l := Label.new(); l.text = text; l.set_position(pos)
-	l.add_theme_font_size_override("font_size", sz)
-	l.add_theme_color_override("font_color", col)
-	add_child(l); return l
+# ══════════════════════════════════════════════════
+# #REGION:ANIMATION — Intro sequence via AnimationPlayer
+# ══════════════════════════════════════════════════
+func _build_and_play_intro_animation() -> void:
+	var anim := Animation.new()
+	anim.length = 2.2
 
-# #REGION:ANIMATION — Title slide-in tween
-func _reveal_title() -> void:
-	await get_tree().create_timer(0.3).timeout
-	var title := get_node_or_null("Title") as Label
-	var glow  := get_node_or_null("TitleGlow") as Label
-	var sub   := get_node_or_null("Sub") as Label
+	# Fade overlay goes from black → transparent (fade in from black)
+	var t_fade: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_fade, "UI/FadeOverlay:color:a")
+	anim.track_insert_key(t_fade, 0.0, 1.0)
+	anim.track_insert_key(t_fade, 0.6, 0.0)
 
-	var t1 := create_tween().set_parallel(true)
-	if title:
-		t1.tween_property(title, "modulate:a",  1.0, 0.7).set_trans(Tween.TRANS_EXPO)
-		t1.tween_property(title, "position:y", 140.0, 0.7).set_trans(Tween.TRANS_EXPO)
-	if glow:
-		t1.tween_property(glow,  "modulate:a",  1.0, 0.7)
-		t1.tween_property(glow,  "position:y", 143.0, 0.7).set_trans(Tween.TRANS_EXPO)
-	await get_tree().create_timer(0.5).timeout
+	# Title slides UP from below + fades in
+	var t_title_y: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_title_y, "UI/TitleGroup/TitleLabel:position:y")
+	anim.track_set_interpolation_type(t_title_y, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_title_y, 0.3, 195.0)
+	anim.track_insert_key(t_title_y, 0.9, 140.0)
 
-	if sub:
-		var t2 := create_tween()
-		t2.tween_property(sub, "modulate:a", 1.0, 0.5)
-	await get_tree().create_timer(0.3).timeout
+	var t_title_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_title_a, "UI/TitleGroup/TitleLabel:modulate:a")
+	anim.track_insert_key(t_title_a, 0.3, 0.0)
+	anim.track_insert_key(t_title_a, 0.9, 1.0)
 
-	for i in _buttons.size():
-		await get_tree().create_timer(0.07).timeout
+	# Glow follows title
+	var t_glow_y: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_glow_y, "UI/TitleGroup/TitleGlow:position:y")
+	anim.track_set_interpolation_type(t_glow_y, Animation.INTERPOLATION_CUBIC)
+	anim.track_insert_key(t_glow_y, 0.3, 198.0)
+	anim.track_insert_key(t_glow_y, 0.9, 143.0)
+
+	var t_glow_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_glow_a, "UI/TitleGroup/TitleGlow:theme_override_colors/font_color:a")
+	anim.track_insert_key(t_glow_a, 0.3, 0.0)
+	anim.track_insert_key(t_glow_a, 0.9, 0.3)
+
+	# Subtitle fades in
+	var t_sub_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_sub_a, "UI/TitleGroup/SubtitleLabel:modulate:a")
+	anim.track_insert_key(t_sub_a, 0.8, 0.0)
+	anim.track_insert_key(t_sub_a, 1.2, 1.0)
+
+	# Panel slides in + fades
+	var t_panel_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_panel_a, "UI/MenuPanel:modulate:a")
+	anim.track_insert_key(t_panel_a, 1.0, 0.0)
+	anim.track_insert_key(t_panel_a, 1.4, 1.0)
+
+	var t_accent_a: int = anim.add_track(Animation.TYPE_VALUE)
+	anim.track_set_path(t_accent_a, "UI/PanelAccent:modulate:a")
+	anim.track_insert_key(t_accent_a, 1.0, 0.0)
+	anim.track_insert_key(t_accent_a, 1.4, 1.0)
+
+	# Register and play
+	var lib := AnimationLibrary.new()
+	lib.add_animation("menu_in", anim)
+	_anim.add_animation_library("", lib)
+	_anim.animation_finished.connect(_on_intro_done)
+	_anim.play("menu_in")
+
+func _on_intro_done(_anim_name: StringName) -> void:
+	# Stagger buttons in after main animation finishes
+	var btns: Array = _btn_container.get_children()
+	for i in btns.size():
+		var btn := btns[i] as Button
 		var tw := create_tween()
-		tw.tween_property(_buttons[i], "modulate:a", 1.0, 0.3)
+		tw.tween_interval(i * 0.08)
+		tw.tween_property(btn, "modulate:a", 1.0, 0.3)
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey:

@@ -60,7 +60,7 @@ const LOGO_CODEMON: String = "res://assets/codemon/art/logo/codemon.png"
 #REGION:CHARACTERS ─────────────────────────────────
 const JIMMY:     String = "res://assets/codemon/art/character/jimmy.png"
 const WORLD_MAP: String = "res://assets/codemon/art/map/map.png"
-const PLAYER:    String = "res://assets/codemon/art/character/jimmy.png"
+# Player appearance is now LPC — use SaveManager.get_player_appearance() + CharacterSprite
 
 const NPCS: Dictionary = {
 	"dr_forest":   "res://assets/codemon/art/character/npc/dr_forest.png",
@@ -90,26 +90,15 @@ const BTN_M_PRESSED:String = "res://assets/codemon/art/component/btn_m_clicked.p
 const BTN_M_HOVER:  String = "res://assets/codemon/art/component/btn_m_selected.png"
 
 #REGION:LPC ────────────────────────────────────────
-const LPC_BODIES: Dictionary = {
-	"bodies_1": "res://assets/lpc/bodies/bodies_1.png",
-}
-const LPC_HAIR: Dictionary = {
-	"male_1":   "res://assets/lpc/hair/hair_male_1.png",
-	"female_1": "res://assets/lpc/hair/hair_female_1.png",
-}
-const LPC_FACES: Dictionary = {
-	"female_amber": "res://assets/lpc/faces/female_idle_amber.png",
-	"female_black": "res://assets/lpc/faces/female_idle_black.png",
-	"female_blue":  "res://assets/lpc/faces/female_idle_blue.png",
-	"female_brown": "res://assets/lpc/faces/female_idle_brown.png",
-	"female_light": "res://assets/lpc/faces/female_idle_light.png",
-}
-const LPC_SHIRTS: Dictionary = {
-	"sleeveless_black": "res://assets/lpc/shirts/sleeveless_female_black.png",
-	"sleeveless_blue":  "res://assets/lpc/shirts/sleeveless_female_blue.png",
-	"sleeveless_green": "res://assets/lpc/shirts/sleeveless_female_green.png",
-	"sleeveless_red":   "res://assets/lpc/shirts/sleeveless_female_red.png",
-}
+# Full LPC character system — see scripts/lpc/ for CharacterData,
+# CharacterRandomizer, and CharacterSprite.
+# Asset roots:
+#   Body:    res://assets/lpc/body/{female|male|teen}/{skin}/{anim}.png
+#   Legs:    res://assets/lpc/legs/{type}/{gender}/{anim}.png
+#   Shirt:   res://assets/lpc/{style}/{body}/{anim}/{color}.png
+#   Hair:    res://assets/lpc/hair/{style}/adult/[bg|fg/]{anim}/{color}.png
+#   Feet:    res://assets/lpc/feet/{type}/{body}/{anim}/{color}.png
+const LPC_ROOT: String = "res://assets/lpc/"
 
 #REGION:CODEMON ────────────────────────────────────
 const CODEMON: Dictionary = {

@@ -1,132 +1,161 @@
 extends Node2D
-
-# ═══════════════════════════════════════════════════
-# CitizenNode.gd — Kingdom Queue
-# Visual representation of a citizen in the queue.
-# Uses codemon sprites for character visuals.
-# ═══════════════════════════════════════════════════
+# #REGION:CHARACTERS — One citizen in the Kingdom Queue.
+# Uses CharacterSprite (LPC layered sprites) for appearance.
+# Created via script so ALL nodes are built in _ready(), no @onready.
 
 signal clicked(citizen_id: int)
 
-const CITIZEN_SPRITES: Dictionary = {
-	"normal":   "int",
-	"vip":      "for",
-	"merchant": "string",
-	"elderly":  "bool",
-}
+const CITIZEN_SCALE: float = 2.5
 
-const CITIZEN_COLORS: Dictionary = {
+var data:           Dictionary = {}
+var is_front:       bool       = false
+var patience_ratio: float      = 1.0
+var _target_y:      float      = 0.0
+var _move_speed:    float      = 180.0
+var _bounce:        float      = 0.0
+
+# Child nodes built in _ready
+var _char_sprite: Node2D   # CharacterSprite instance
+var _name_lbl:    Label
+var _badge:       Label
+var _patience:    ColorRect
+
+# Type badge colors
+const TYPE_COLORS: Dictionary = {
 	"normal":   Color("#4D96FF"),
-	"merchant": Color("#6BCB77"),
 	"vip":      Color("#FFD93D"),
+	"merchant": Color("#6BCB77"),
 	"elderly":  Color("#C77DFF"),
 }
 
-var data:      Dictionary = {}
-var queue_pos: int        = -1    # -1 = not in queue
-var is_front:  bool       = false
-var _sprite:   Sprite2D
-var _glow:     float      = 0.0
-var _bounce:   float      = 0.0
+func _ready() -> void:
+	_build_nodes()
 
+func _build_nodes() -> void:
+	# Shadow under feet
+	var shadow := ColorRect.new()
+	shadow.color = Color(0, 0, 0, 0.3)
+	shadow.set_position(Vector2(-18, 4))
+	shadow.set_size(Vector2(36, 8))
+	add_child(shadow)
 
-var _target_y:     float = 0.0
-var _move_speed:   float = 180.0   # pixels per second
-var patience_ratio: float = 1.0   # 0.0=expired, 1.0=full — drives patience bar
+	# LPC CharacterSprite — full animated layered character
+	_char_sprite = load("res://scripts/lpc/CharacterSprite.gd").new()
+	_char_sprite.name = "CharSprite"
+	_char_sprite.scale = Vector2(CITIZEN_SCALE, CITIZEN_SCALE)
+	_char_sprite.position = Vector2(-32 * CITIZEN_SCALE, -61 * CITIZEN_SCALE)
+	add_child(_char_sprite)  # add_child first so _ready fires before apply
+
+	# Name label
+	_name_lbl = Label.new()
+	_name_lbl.set_position(Vector2(-32, 58))
+	_name_lbl.set_size(Vector2(64, 14))
+	_name_lbl.add_theme_font_size_override("font_size", 9)
+	_name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_name_lbl)
+
+	# Type badge
+	_badge = Label.new()
+	_badge.set_position(Vector2(-32, 70))
+	_badge.set_size(Vector2(64, 12))
+	_badge.add_theme_font_size_override("font_size", 8)
+	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_badge)
+
+	# Patience bar background
+	var bar_bg := ColorRect.new()
+	bar_bg.color = Color("#1a1a2e")
+	bar_bg.set_position(Vector2(-24, -125))
+	bar_bg.set_size(Vector2(48, 5))
+	add_child(bar_bg)
+
+	# Patience bar fill
+	_patience = ColorRect.new()
+	_patience.color = Color("#6BCB77")
+	_patience.set_position(Vector2(-24, -125))
+	_patience.set_size(Vector2(48, 5))
+	_patience.visible = false
+	add_child(_patience)
+
+	# Click area
+	var area := Area2D.new()
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(64, 80)
+	shape.shape = rect
+	area.add_child(shape)
+	area.input_event.connect(_on_area_input)
+	add_child(area)
+
+func setup(citizen: Dictionary, _sy: float = 0.0, ty: float = 0.0) -> void:
+	data = citizen
+	_target_y = ty
+	_refresh()
+
+func set_front(v: bool) -> void:
+	is_front = v
+	_refresh()
 
 func set_target_y(y: float) -> void:
 	_target_y = y
 
-func _process(delta: float) -> void:
-	# Smoothly move citizen toward target Y position
-	if abs(position.y - _target_y) > 2.0:
-		position.y = move_toward(position.y, _target_y, _move_speed * delta)
-	# Animate front citizen bounce
-	if is_front:
-		_bounce += delta * 2.0
-		_sprite.position.y = -14.0 + sin(_bounce) * 4.0
-	queue_redraw()
-
-func _ready() -> void:
-	_build_visuals()
-	_setup_input()
-
-func setup(citizen: Dictionary, spawn_y: float = 0.0, target_y: float = 0.0) -> void:
-	data     = citizen
-	is_front = false  # updated by Game.gd via set_front()
-	_update_visuals()
-
-func set_front(v: bool) -> void:
-	is_front = v
-	_update_visuals()
-	queue_redraw()
-
 func play_serve_anim() -> void:
-	# Flash green then shrink out when served
+	# Play happy emote then shrink out
+	if is_instance_valid(_char_sprite):
+		_char_sprite.play("emote")
 	var tw := create_tween()
-	tw.tween_property(self, "scale", Vector2(1.4, 1.4), 0.1)
-	tw.tween_property(self, "scale", Vector2(0.0, 0.0), 0.2)
+	tw.tween_interval(0.4)
+	tw.tween_property(self, "scale", Vector2(1.5, 1.5), 0.08).set_trans(Tween.TRANS_BACK)
+	tw.tween_property(self, "scale", Vector2(0.0, 0.0), 0.18).set_trans(Tween.TRANS_EXPO)
 	tw.tween_callback(queue_free)
 
-func _build_visuals() -> void:
-	# Background circle
-	var bg := ColorRect.new()
-	bg.color = Color("#1a1a2e")
-	bg.set_position(Vector2(-44, -50))
-	bg.set_size(Vector2(88, 100))
-	add_child(bg)
+func _refresh() -> void:
+	var ctype: String = data.get("type", "normal")
+	var col: Color    = TYPE_COLORS.get(ctype, Color("#4D96FF"))
 
-	# Codemon sprite
-	_sprite = Sprite2D.new()
-	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale = Vector2(2.2, 2.2)
-	_sprite.position = Vector2(0, -14)
-	add_child(_sprite)
+	# Apply the pre-randomized LPC appearance stored in citizen data
+	if is_instance_valid(_char_sprite):
+		var appearance: Dictionary = data.get("appearance", {})
+		if not appearance.is_empty():
+			_char_sprite.apply(appearance)
+		# Front citizen faces down (toward camera), others face down too
+		_char_sprite.set_direction(2)
+		# Idle when waiting, walk animation when moving toward front
+		_char_sprite.play("idle")
 
-	# Clickable area
-	var area := Area2D.new()
-	var col  := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = Vector2(88, 100)
-	col.shape  = rect
-	area.add_child(col)
-	area.input_event.connect(func(_v, event, _i):
-		if event is InputEventMouseButton:
-			var mb := event as InputEventMouseButton
-			if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-				emit_signal("clicked", data.get("id", -1) as int)
-	)
-	add_child(area)
+	if is_instance_valid(_name_lbl):
+		_name_lbl.text = data.get("name", "?")
+		_name_lbl.add_theme_color_override("font_color", Color("#e8e8f0"))
 
-func _update_visuals() -> void:
-	if not _sprite: return
-	var ctype: String = data.get("type", "normal") as String
-	var key: String   = CITIZEN_SPRITES.get(ctype, "int") as String
-	var tex: Texture2D = AssetMap.codemon(key)
-	if tex: _sprite.texture = tex
+	if is_instance_valid(_badge):
+		_badge.text = "[%s]" % ctype
+		_badge.add_theme_color_override("font_color", col)
 
-func _draw() -> void:
-	var ctype: String = data.get("type", "normal") as String
-	var col: Color    = CITIZEN_COLORS.get(ctype, Color("#4D96FF")) as Color
-
-	# Border glow for front
-	if is_front:
-		draw_arc(Vector2(0, -14), 36, 0, TAU, 32, col, 2.5)
-		draw_string(ThemeDB.fallback_font, Vector2(-24, 46), "SERVE ME!", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, col)
+func _process(delta: float) -> void:
+	# Smooth queue movement
+	if abs(position.y - _target_y) > 2.0:
+		position.y = move_toward(position.y, _target_y, _move_speed * delta)
+		# Play walk while moving
+		if is_instance_valid(_char_sprite):
+			_char_sprite.play("walk")
 	else:
-		draw_arc(Vector2(0, -14), 36, 0, TAU, 32, col.darkened(0.5), 1.5)
+		# Settled — play idle
+		if is_instance_valid(_char_sprite):
+			_char_sprite.play("idle")
 
-	# Name label
-	var citizen_name: String = data.get("name", "?") as String
-	draw_string(ThemeDB.fallback_font, Vector2(-32, 28), citizen_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#e8e8f0"))
+	# Front citizen subtle bounce
+	if is_front and is_instance_valid(_char_sprite):
+		_bounce += delta * 2.0
+		_char_sprite.position.y = sin(_bounce) * 2.0 + (-61 * CITIZEN_SCALE)
 
-	# Type badge
-	draw_string(ThemeDB.fallback_font, Vector2(-24, 40), "[%s]" % ctype, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
+	# Patience bar
+	if is_instance_valid(_patience):
+		_patience.visible = patience_ratio < 0.9
+		_patience.set_size(Vector2(48.0 * patience_ratio, 5))
+		_patience.color = Color("#6BCB77").lerp(Color("#FF6B6B"), 1.0 - patience_ratio)
 
-	# Queue position indicator
-	if queue_pos >= 0:
-		var pos_col: Color = Color("#6BCB77") if queue_pos == 0 else Color("#555577")
-		draw_string(ThemeDB.fallback_font, Vector2(-8, -46), "#%d" % (queue_pos + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, pos_col)
-
-func _setup_input() -> void:
-	pass  # handled via Area2D above
+func _on_area_input(_vp: Node, ev: InputEvent, _idx: int) -> void:
+	if ev is InputEventMouseButton:
+		var mb := ev as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			emit_signal("clicked", data.get("id", -1) as int)

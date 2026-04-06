@@ -15,8 +15,9 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color("#0e0f04")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.04, 0.06, 0.04, 0.88)
+	bg.set_position(Vector2.ZERO)
+	bg.set_size(Vector2(1280, 720))
 	add_child(bg)
 
 	var hdr := ColorRect.new()

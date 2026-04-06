@@ -72,6 +72,11 @@ func _build_shared() -> void:
 	spell_caster.game_over.connect(_on_game_over)
 
 func _go_tutorial() -> void:
+	# Build world behind so tutorial shows as overlay
+	var world: Node2D = (load("res://scripts/chapters/stack/CastleWorld.gd") as GDScript).new()
+	world.name = "_WorldBehind"
+	world.z_index = -20
+	add_child(world)
 	_load_scene(TUTORIAL_SCENE)
 	var t: Node2D = _active_scene
 	if t:

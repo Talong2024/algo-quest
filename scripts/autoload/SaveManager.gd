@@ -108,3 +108,25 @@ func save_exists() -> bool:
 func get_save_size_kb() -> float:
 	if not FileAccess.file_exists(SAVE_PATH): return 0.0
 	return FileAccess.get_file_as_bytes(SAVE_PATH).size() / 1024.0
+
+# ─── LPC Player Appearance ────────────────────────
+
+func set_player_appearance(appearance: Dictionary) -> void:
+	_cfg.set_value("player", "appearance", JSON.stringify(appearance))
+	_cfg.save(CONFIG_PATH)
+
+func get_player_appearance() -> Dictionary:
+	var raw: String = _cfg.get_value("player","appearance","") as String
+	if raw.is_empty():
+		return {}
+	var result = JSON.parse_string(raw)
+	if result is Dictionary:
+		return result as Dictionary
+	return {}
+
+func set_player_name(pname: String) -> void:
+	_cfg.set_value("player","name", pname)
+	_cfg.save(CONFIG_PATH)
+
+func get_player_name() -> String:
+	return _cfg.get_value("player","name","Hero") as String

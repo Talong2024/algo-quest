@@ -31,6 +31,11 @@ func _ready() -> void:
 	_go_tutorial()
 
 func _go_tutorial() -> void:
+	# Build world behind so tutorial shows as overlay
+	var world: Node2D = (load("res://scripts/chapters/graph/KingdomWorld.gd") as GDScript).new()
+	world.name = "_WorldBehind"
+	world.z_index = -20
+	add_child(world)
 	if _active: _active.queue_free()
 	var packed: PackedScene = load(TUTORIAL_SCENE)
 	_active = packed.instantiate()

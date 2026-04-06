@@ -114,15 +114,17 @@ func _build_ui() -> void:
 		brr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; add_child(brr)
 
 	# Jimmy sprite on left
-	var jimmy_tex: Texture2D = AssetMap.load_tex(AssetMap.JIMMY)
-	if jimmy_tex:
-		var jimmy := Sprite2D.new()
-		jimmy.texture = jimmy_tex
-		jimmy.hframes = 16; jimmy.frame = 0
-		jimmy.position = Vector2(230, 480)
-		jimmy.scale = Vector2(5.0, 5.0)
-		jimmy.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		add_child(jimmy)
+	# #REGION:CHARACTERS — LPC player character on login screen
+	var lpc_char: Node2D = load("res://scripts/lpc/CharacterSprite.gd").new()
+	lpc_char.position = Vector2(190, 360)
+	lpc_char.scale = Vector2(4.5, 4.5)
+	add_child(lpc_char)
+	var saved_look: Dictionary = SaveManager.get_player_appearance()
+	if saved_look.is_empty():
+		saved_look = CharacterRandomizer.randomize_character()
+	lpc_char.apply(saved_look)
+	lpc_char.play("idle")
+	lpc_char.set_direction(2)
 
 	# Tagline
 	_lbl("\"Master Data Structures. Capture your Codemons.\"",
@@ -370,10 +372,12 @@ func _submit() -> void:
 			_set_busy(false)
 
 func _play_offline() -> void:
-	# Skip auth — use local save data
-	var local_name: String = ProgressTracker.get_player_name()
-	if local_name.is_empty() or local_name == "Player":
-		GameRouter.go_name_entry()
+	# Continue = has character → WorldMap
+	# New Game = no character → CharacterCreate
+	var has_char: bool = SaveManager.get_setting("char_variant", "") != ""
+	var has_name: bool = ProgressTracker.get_player_name() not in ["", "Player"]
+	if has_char and has_name:
+		GameRouter.go_world_map()
 	else:
 		GameRouter.go_char_create()
 
@@ -385,14 +389,19 @@ func _apply_player_data(player_data: Dictionary) -> void:
 	SaveManager.set_setting("player_course", player_data.get("course", "") as String)
 	SaveManager.set_setting("player_email",  player_data.get("email",  "") as String)
 
-	# First time? Go to char select. Returning? Go to world map.
-	var has_progress: bool = ProgressTracker.get_world_map_snapshot().size() > 0
-	if not FirebaseManager.is_configured() and _mode == "signup":
+	# #REGION:UI — Routing rules:
+	# Sign UP (new account) → CharacterCreate → CharacterSelect → WorldMap
+	# Sign IN (returning)   → WorldMap directly (already has character)
+	# Offline NEW game      → CharacterCreate
+	# Offline Continue      → WorldMap
+	var is_new_account: bool = (_mode == "signup")
+	var has_char: bool       = SaveManager.get_setting("char_variant", "") != ""
+	var has_name: bool       = ProgressTracker.get_player_name() != ""
+
+	if is_new_account or (not has_char):
 		GameRouter.go_char_create()
-	elif has_progress:
-		GameRouter.go_world_map()
 	else:
-		GameRouter.go_char_create()
+		GameRouter.go_world_map()
 
 func _set_busy(v: bool) -> void:
 	_busy = v

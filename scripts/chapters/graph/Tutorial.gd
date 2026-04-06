@@ -1,4 +1,4 @@
-extends Node2D
+extends CanvasLayer
 
 signal start_requested
 var level_data: Dictionary = {}
@@ -12,7 +12,7 @@ func _ready() -> void:
 	_timer.timeout.connect(_demo_step); add_child(_timer); _timer.start()
 
 func _build_ui() -> void:
-	var bg := ColorRect.new(); bg.color = Color("#1a1a0a")
+	var bg := ColorRect.new(); bg.color = Color(0.04, 0.06, 0.04, 0.88)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(bg)
 	var hdr := ColorRect.new(); hdr.color = Color("#111108")
 	hdr.set_position(Vector2.ZERO); hdr.set_size(Vector2(1280,64)); add_child(hdr)

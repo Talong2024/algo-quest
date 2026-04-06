@@ -15,8 +15,9 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color("#0d0a14")
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.04, 0.06, 0.04, 0.88)
+	bg.set_position(Vector2.ZERO)
+	bg.set_size(Vector2(1280, 720))
 	add_child(bg)
 
 	var header := ColorRect.new()
@@ -56,7 +57,7 @@ func _build_ui() -> void:
 	add_child(desc)
 
 	var rules_bg := ColorRect.new()
-	rules_bg.color = Color("#110e18")
+	rules_bg.color = Color(0.04, 0.06, 0.04, 0.88)
 	rules_bg.set_position(Vector2(20, 140))
 	rules_bg.set_size(Vector2(540, 280))
 	add_child(rules_bg)
@@ -78,7 +79,7 @@ func _build_ui() -> void:
 	add_child(rules)
 
 	var preview_bg := ColorRect.new()
-	preview_bg.color = Color("#1e1a2a")
+	preview_bg.color = Color(0.04, 0.06, 0.04, 0.88)
 	preview_bg.set_position(Vector2(590, 140))
 	preview_bg.set_size(Vector2(660, 280))
 	add_child(preview_bg)
@@ -97,7 +98,7 @@ func _build_ui() -> void:
 	add_child(_anim_lbl)
 
 	var code_bg := ColorRect.new()
-	code_bg.color = Color("#080510")
+	code_bg.color = Color(0.04, 0.06, 0.04, 0.88)
 	code_bg.set_position(Vector2(20, 440))
 	code_bg.set_size(Vector2(1220, 110))
 	add_child(code_bg)

@@ -20,7 +20,7 @@ extends Node
 
 # ── CONFIGURE THESE ────────────────────────────────
 const PROJECT_ID: String = "algoquest-3f812"
-const API_KEY:    String = "YOUR_FIREBASE_WEB_API_KEY"
+const API_KEY:    String = "AIzaSyC6r1sMMfdWqcSB2_-FH7ZsySKrPLVogrk"
 # ───────────────────────────────────────────────────
 
 const AUTH_BASE:  String = "https://identitytoolkit.googleapis.com/v1"
