@@ -114,4 +114,4 @@ func _refresh() -> void:
 func _on_confirm() -> void:
 	var ch: Dictionary = CHARACTERS[_selected_idx]
 	SaveManager.set_setting("character_class", ch["id"])
-	GameRouter.go_to("world_map")
+	GameRouter.go_world_map()

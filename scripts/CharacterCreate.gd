@@ -66,10 +66,10 @@ var _shoe_idx:   int = 1   # basic boots
 var _shcol_idx:  int = 14  # leather
 
 var _preview: Node2D
-var _anims: Array = ["idle","walk","run","slash","spellcast"]
+var _anims: Array = ["idle","walk"]
 var _anim_idx: int = 0
 var _anim_timer: float = 0.0
-var _anim_hold: float = 3.0
+var _anim_hold: float = 2.5
 
 func _ready() -> void:
 	_build_ui()
@@ -175,4 +175,4 @@ func _process(delta: float) -> void:
 func _on_confirm() -> void:
 	var appearance: Dictionary = _get_appearance()
 	SaveManager.set_player_appearance(appearance)
-	GameRouter.go_to("char_select")
+	GameRouter.go_char_select()

@@ -12,6 +12,7 @@ const SCENES: Dictionary = {
 	"auth_screen":   "res://scenes/AuthScreen.tscn",
 	"char_create":   "res://scenes/CharacterCreate.tscn",
 	"codemon_intro": "res://scenes/CodemonIntro.tscn",
+	"intro_world":   "res://scenes/intro/IntroWorld.tscn",
 	"main_menu":     "res://scenes/MainMenu.tscn",
 	"name_entry":    "res://scenes/NameEntry.tscn",
 	"world_map":     "res://scenes/WorldMap.tscn",
@@ -52,6 +53,7 @@ func _ready() -> void:
 func go_boot() -> void:           _load("boot")
 func go_main_menu() -> void:      _load("main_menu")
 func go_codemon_intro() -> void:   _load("codemon_intro")
+func go_intro_world() -> void:     _load("intro_world")
 func go_char_create() -> void:    _load("char_create")
 func go_ss_intro() -> void:       _load("ss_intro")
 func go_auth_screen() -> void:    _load("auth_screen")

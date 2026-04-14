@@ -1,31 +1,21 @@
 extends Node
 
 const ANIMATIONS: Dictionary = {
-	"idle":        {"frames": 2,  "rows": 4, "fps": 4},
-	"walk":        {"frames": 9,  "rows": 4, "fps": 8},
-	"run":         {"frames": 9,  "rows": 4, "fps": 12},
-	"slash":       {"frames": 6,  "rows": 4, "fps": 8},
-	"spellcast":   {"frames": 7,  "rows": 4, "fps": 8},
-	"thrust":      {"frames": 8,  "rows": 4, "fps": 8},
-	"shoot":       {"frames": 13, "rows": 4, "fps": 8},
-	"halfslash":   {"frames": 6,  "rows": 4, "fps": 8},
-	"backslash":   {"frames": 13, "rows": 4, "fps": 8},
-	"jump":        {"frames": 8,  "rows": 4, "fps": 8},
-	"sit":         {"frames": 3,  "rows": 4, "fps": 4},
-	"emote":       {"frames": 3,  "rows": 4, "fps": 4},
-	"combat_idle": {"frames": 2,  "rows": 4, "fps": 4},
-	"hurt":        {"frames": 6,  "rows": 4, "fps": 6},
-	"climb":       {"frames": 6,  "rows": 4, "fps": 8},
+	"idle":  {"frames": 2, "rows": 4, "fps": 4},
+	"walk":  {"frames": 9, "rows": 4, "fps": 8},
+	"run":   {"frames": 9, "rows": 4, "fps": 12},
+	"emote": {"frames": 3, "rows": 4, "fps": 4},
+	"hurt":  {"frames": 6, "rows": 4, "fps": 6},
+	"sit":   {"frames": 3, "rows": 4, "fps": 4},
+	"jump":  {"frames": 8, "rows": 4, "fps": 8},
+	"climb": {"frames": 6, "rows": 4, "fps": 8},
 }
 
 const BODY_TYPES: Array     = ["female", "male", "teen"]
 const DIRECTION_NAMES: Array = ["Up", "Left", "Down", "Right"]
 const TILE_SIZE: int         = 64
 
-const DISPLAY_ANIMATIONS: Array = [
-	"idle","walk","run","combat_idle","slash","halfslash","backslash",
-	"spellcast","thrust","shoot","jump","sit","emote","hurt","climb"
-]
+const DISPLAY_ANIMATIONS: Array = ["idle","walk","run","emote","hurt","sit","jump","climb"]
 
 # ---- Shirts ----
 const SHIRT_STYLES: Array = [
@@ -134,7 +124,7 @@ var sock_color_index: int   = 0
 var current_animation: String = "idle"
 var direction: int          = 2    # down
 
-signal character_changed
+# signal character_changed  # removed: unused
 
 func get_feet_body(body: String) -> String:
 	return "male" if body == "male" else "thin"

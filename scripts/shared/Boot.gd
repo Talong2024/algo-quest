@@ -19,6 +19,9 @@ func _ready() -> void:
 	if not ProgressTracker.cutscene_seen("ss_intro"):
 		ProgressTracker.mark_cutscene_seen("ss_intro")
 		GameRouter.go_ss_intro()
+	elif SaveManager.get_player_appearance().is_empty():
+		# Has seen SS intro but never completed character creation — go to intro world
+		GameRouter.go_intro_world()
 	else:
 		GameRouter.go_main_menu()
 

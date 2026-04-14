@@ -372,14 +372,13 @@ func _submit() -> void:
 			_set_busy(false)
 
 func _play_offline() -> void:
-	# Continue = has character → WorldMap
-	# New Game = no character → CharacterCreate
-	var has_char: bool = SaveManager.get_setting("char_variant", "") != ""
-	var has_name: bool = ProgressTracker.get_player_name() not in ["", "Player"]
-	if has_char and has_name:
+	# Continue = has appearance saved → WorldMap
+	# New Game = no appearance → Story intro → CharCreate
+	var has_appearance: bool = not SaveManager.get_player_appearance().is_empty()
+	if has_appearance:
 		GameRouter.go_world_map()
 	else:
-		GameRouter.go_char_create()
+		GameRouter.go_intro_world()
 
 func _apply_player_data(player_data: Dictionary) -> void:
 	var disp: String = player_data.get("name", "") as String
@@ -398,8 +397,9 @@ func _apply_player_data(player_data: Dictionary) -> void:
 	var has_char: bool       = SaveManager.get_setting("char_variant", "") != ""
 	var has_name: bool       = ProgressTracker.get_player_name() != ""
 
-	if is_new_account or (not has_char):
-		GameRouter.go_char_create()
+	var has_appearance: bool = not SaveManager.get_player_appearance().is_empty()
+	if is_new_account or not has_appearance:
+		GameRouter.go_intro_world()
 	else:
 		GameRouter.go_world_map()
 
