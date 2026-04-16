@@ -116,6 +116,26 @@ static func level_intro(level: int) -> Array:
 		3:
 			return [
 				{
+					"speaker": "Old Gatekeeper",
+					"portrait": "doorman",
+					"text": "Listen carefully. Monsters have started sneaking into the queue disguised as citizens. Do NOT let them through the gate!",
+				},
+				{
+					"speaker": "Old Gatekeeper",
+					"portrait": "doorman",
+					"text": "If you see a SKELETON or ORC in the queue — serve them and you lose a life. You must REJECT them or let their patience expire.",
+				},
+				{
+					"speaker": "You",
+					"portrait": "player",
+					"text": "So I'm managing patience timers AND watching for monsters? That's... intense.",
+				},
+				{
+					"speaker": "Old Gatekeeper",
+					"portrait": "doorman",
+					"text": "Welcome to real systems work. TTL, expiry policies, AND security filters — all at once.",
+				},
+				{
 					"speaker": "Elderly Citizen",
 					"portrait": "elderly",
 					"text": "Excuse me, young Doorman... I've been waiting a long time. My patience... it won't hold forever.",

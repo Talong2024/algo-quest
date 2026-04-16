@@ -56,6 +56,7 @@ visible = false
 color = Color(0.1, 0.1, 0.18, 1)
 position = Vector2(-24, -130)
 size = Vector2(48, 5)
+visible = false
 
 [node name="PatienceBar" type="ColorRect" parent="."]
 color = Color(0.42, 0.8, 0.47, 1)

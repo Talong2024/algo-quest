@@ -94,7 +94,6 @@ func _go_tutorial() -> void:
 		_show_tutorial()
 
 func _play_walkin_then_tutorial() -> void:
-	# Spawn the player walking in from the bottom of the lane toward the gate
 	var world_behind: Node2D = get_node_or_null("Q_WorldBehind") as Node2D
 	if not world_behind:
 		_show_tutorial()
@@ -103,7 +102,7 @@ func _play_walkin_then_tutorial() -> void:
 	var walker: Node2D = load("res://scripts/lpc/CharacterSprite.gd").new()
 	walker.name     = "WalkInPlayer"
 	walker.scale    = Vector2(3.0, 3.0)
-	walker.position = Vector2(640, 780)  # start below screen
+	walker.position = Vector2(640, 780)
 	walker.z_index  = 20
 	world_behind.add_child(walker)
 
@@ -112,17 +111,15 @@ func _play_walkin_then_tutorial() -> void:
 		appearance = CharacterRandomizer.randomize_character()
 	walker.apply(appearance)
 	walker.play("walk")
-	walker.set_direction(0)  # facing up, walking toward gate
+	walker.set_direction(1)  # sideways walk (left profile) looks correct
 
-	# Walk up to the gate position over 2.5 seconds
 	var tw := create_tween()
-	tw.tween_property(walker, "position:y", 320.0, 2.5).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(walker, "position:y", 310.0, 2.8).set_trans(Tween.TRANS_SINE)
 	tw.tween_callback(func():
 		walker.play("idle")
-		walker.set_direction(2)  # turn to face camera
+		walker.set_direction(2)
+		get_tree().create_timer(0.9).timeout.connect(_show_tutorial, CONNECT_ONE_SHOT)
 	)
-	tw.tween_interval(0.8)  # pause at gate
-	tw.tween_callback(_show_tutorial)
 
 func _show_tutorial() -> void:
 	_load_scene(TUTORIAL_SCENE)

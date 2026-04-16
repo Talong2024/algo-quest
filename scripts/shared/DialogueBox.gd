@@ -175,7 +175,9 @@ func _setup_choices(line: Dictionary) -> void:
 	# Clear old choice buttons
 	for child in _choices.get_children():
 		child.queue_free()
-	await get_tree().process_frame
+	_build_choice_buttons.call_deferred(line)
+
+func _build_choice_buttons(line: Dictionary) -> void:
 
 	var choices: Array   = line.get("choices", []) as Array
 	var cvar: String     = str(line.get("choice_var", "choice"))

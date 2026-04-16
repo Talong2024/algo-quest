@@ -5,6 +5,7 @@ signal drag_released(citizen_id: int, world_pos: Vector2)
 
 @onready var _char_sprite:  Node2D    = $CharSprite
 @onready var _patience_bar: ColorRect = $PatienceBar
+@onready var _patience_bg:  ColorRect = $PatienceBarBG
 @onready var _name_lbl:     Label     = $NameLabel
 @onready var _badge:        Label     = $TypeBadge
 @onready var _click_area:   Area2D    = $ClickArea
@@ -120,7 +121,7 @@ func _process(delta: float) -> void:
 			if moving:
 				_char_sprite.play("walk")
 				# Citizens walk UP the screen toward the gate
-				_char_sprite.set_direction(0)
+				_char_sprite.set_direction(1)
 			else:
 				_char_sprite.play("idle")
 				# Idle — face the camera (down)
@@ -128,9 +129,12 @@ func _process(delta: float) -> void:
 
 	# Patience bar
 	if is_instance_valid(_patience_bar):
-		_patience_bar.visible = patience_ratio < 0.95
-		_patience_bar.size    = Vector2(48.0 * patience_ratio, 5.0)
-		_patience_bar.color   = Color("#6BCB77").lerp(Color("#FF6B6B"), 1.0 - patience_ratio)
+		var show_bar: bool = patience_ratio < 0.95
+		_patience_bar.visible = show_bar
+		if is_instance_valid(_patience_bg):
+			_patience_bg.visible = show_bar
+		_patience_bar.size  = Vector2(48.0 * patience_ratio, 5.0)
+		_patience_bar.color = Color("#6BCB77").lerp(Color("#FF6B6B"), 1.0 - patience_ratio)
 
 	# Anger bubble timeout
 	if _anger_timer > 0.0:

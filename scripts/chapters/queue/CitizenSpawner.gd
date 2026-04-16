@@ -8,11 +8,13 @@ const NAMES := [
 	"Marco","Nadia","Omar","Priya","Quinn","Rosa","Sam","Tala"
 ]
 const TYPES := {
-	"normal":   {"label":"Normal",   "color":Color("#4D96FF"), "patience":18.0, "points":100, "priority":3},
-	"vip":      {"label":"VIP",      "color":Color("#FFD93D"), "patience":10.0, "points":200, "priority":1},
-	"merchant": {"label":"Merchant", "color":Color("#6BCB77"), "patience":22.0, "points":150, "priority":2},
-	"elderly":  {"label":"Elderly",  "color":Color("#C77DFF"), "patience":8.0,  "points":120, "priority":3},
-	"guard":    {"label":"Guard",    "color":Color("#FF6B6B"), "patience":30.0, "points":80,  "priority":2},
+	"normal":   {"label":"Normal",   "color":Color("#4D96FF"), "patience":18.0, "points":100,  "priority":3},
+	"vip":      {"label":"VIP",      "color":Color("#FFD93D"), "patience":10.0, "points":200,  "priority":1},
+	"merchant": {"label":"Merchant", "color":Color("#6BCB77"), "patience":22.0, "points":150,  "priority":2},
+	"elderly":  {"label":"Elderly",  "color":Color("#C77DFF"), "patience":8.0,  "points":120,  "priority":3},
+	"guard":    {"label":"Guard",    "color":Color("#FF6B6B"), "patience":30.0, "points":80,   "priority":2},
+	"skeleton": {"label":"UNDEAD!",  "color":Color("#44FF88"), "patience":25.0, "points":-200, "priority":3, "is_enemy":true},
+	"orc":      {"label":"MONSTER!", "color":Color("#FF4400"), "patience":20.0, "points":-300, "priority":3, "is_enemy":true},
 }
 
 # Returns citizens tuned to the level's mechanic
@@ -31,11 +33,11 @@ static func get_citizens(level: int, mechanic: String = "fifo") -> Array:
 				{"type":"normal"},{"type":"normal"},
 			]
 		"patience":
-			# Mix of elderly (urgent) and normal — player must decide when to break FIFO
+			# Enemies sneak into the queue — player must recognize and REJECT them
 			return [
 				{"type":"normal"},{"type":"elderly"},{"type":"normal"},
-				{"type":"normal"},{"type":"elderly"},{"type":"normal"},
-				{"type":"elderly"},{"type":"normal"},{"type":"normal"},
+				{"type":"skeleton"},{"type":"normal"},{"type":"elderly"},
+				{"type":"normal"},{"type":"orc"},{"type":"normal"},
 			]
 		"priority":
 			# VIPs arrive mid-queue — must be dragged forward
@@ -96,6 +98,16 @@ func _spawn_next() -> void:
 	if not _cached_appearances.has(_id):
 		_cached_appearances[_id] = CharacterRandomizer.randomize_character()
 	var appearance: Dictionary = _cached_appearances[_id]
+	# Override appearance for enemy types
+	var ctype: String = template.get("type","normal")
+	if ctype == "skeleton":
+		appearance = {"body_type":"enemy_skeleton","skin_tone":"","hair_style":"","hair_color":"",
+			"shirt_style":"","shirt_color":"","leg_type":"","shoe_type":"","shoe_color":"",
+			"sock_type":"","sock_color":""}
+	elif ctype == "orc":
+		appearance = {"body_type":"enemy_orc","skin_tone":"","hair_style":"","hair_color":"",
+			"shirt_style":"","shirt_color":"","leg_type":"","shoe_type":"","shoe_color":"",
+			"sock_type":"","sock_color":""}
 
 	var citizen: Dictionary = {
 		"id":           _id,

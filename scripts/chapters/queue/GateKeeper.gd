@@ -187,6 +187,16 @@ func _do_serve(c: Dictionary) -> void:
 	var cid: int = c["id"] as int
 	_patience.erase(cid)
 	_deque_pending.erase(cid)
+	var tdata: Dictionary = {}
+	if _queue_ref.has_method("get_type_data"):
+		tdata = _queue_ref.get_type_data(c.get("type","normal") as String)
+	var is_enemy: bool = (c.get("type","") as String) in ["skeleton","orc"]
+	if is_enemy:
+		# Player let a MONSTER through the gate — lose a life!
+		emit_signal("anger_triggered", cid, "INTRUDER!")
+		_lose_life("💀 You let a %s through the gate! -1 life!" % c.get("label","monster"))
+		emit_signal("citizen_served", c)   # still remove from scene
+		return
 	score += c["points"] as int
 	served += 1
 	emit_signal("score_changed", score)
