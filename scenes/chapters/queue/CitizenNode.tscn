@@ -17,37 +17,37 @@ position = Vector2(-80, -152)
 scale = Vector2(2.5, 2.5)
 script = ExtResource("2")
 
-[node name="hair_bg" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="hair_bg" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="body" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="body" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="legs" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="legs" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="socks" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="socks" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="shoes" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="shoes" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="shirt" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="shirt" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="hair_fg" type="AnimatedSprite2D" parent="CharSprite"]
+[node name="hair_fg" type="Sprite2D" parent="CharSprite"]
 centered = false
 texture_filter = 1
 visible = false

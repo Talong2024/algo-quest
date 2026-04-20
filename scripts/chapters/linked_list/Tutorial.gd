@@ -9,9 +9,20 @@ var _anim_lbl: Label
 var _step:     int   = 0
 var _demo_ll:  Array = []   # [{label, next}]
 
+const DIALOGUE_SCRIPTS = preload("res://scripts/shared/DialogueScripts.gd")
+
 func _ready() -> void:
 	_build_ui()
+	_launch_dialogue()
 	_run_demo()
+
+func _launch_dialogue() -> void:
+	var dlg: Node = load("res://scenes/shared/DialogueBox.tscn").instantiate()
+	add_child(dlg)
+	var level: int = level_data.get("level", 1) as int
+	var lines: Array = DIALOGUE_SCRIPTS.ll_level_intro(level)
+	if not lines.is_empty():
+		dlg.show_dialogue(lines)
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()

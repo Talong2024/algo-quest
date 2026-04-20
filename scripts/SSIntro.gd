@@ -143,4 +143,9 @@ func _skip() -> void:
 	tw.tween_callback(_finish)
 
 func _finish() -> void:
-	GameRouter.go_main_menu()
+	ProgressTracker.mark_cutscene_seen("ss_intro")
+	# New players go straight to character creation after the intro
+	if SaveManager.get_player_appearance().is_empty():
+		GameRouter.go_char_create()
+	else:
+		GameRouter.go_main_menu()

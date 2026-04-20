@@ -1,10 +1,23 @@
 extends Node2D
-# #REGION:CHARACTERS — Linked list carriage node
-# Built in _ready() (no @onready) — loaded via script not tscn.
+## CarriageNode — a train carriage carrying actual cargo.
+## Uses real crate/barrel/sack sprites as cargo icons inside the carriage body.
 
 signal clicked(node_id: int)
 
-const ICONS: Array = ["array","int","for","while","if","string","bool","char"]
+# Cargo sprites — actual crates, barrels, sacks matching train theme
+const CARGO: Array = [
+	"res://assets/game/linked_list/crate_wood.png",
+	"res://assets/game/linked_list/crate_apples.png",
+	"res://assets/game/linked_list/crate_grain.png",
+	"res://assets/game/linked_list/crate_carrots.png",
+	"res://assets/game/linked_list/crate_mixed.png",
+	"res://assets/game/linked_list/sack_large.png",
+	"res://assets/game/linked_list/sack_medium.png",
+	"res://assets/game/linked_list/barrel.png",
+	"res://assets/game/linked_list/vic_chest_closed.png",
+	"res://assets/game/linked_list/vic_barrel_brown.png",
+	"res://assets/game/linked_list/vic_pot_clay.png",
+]
 
 var data:     Dictionary = {}
 var is_head:  bool       = false
@@ -12,57 +25,80 @@ var is_tail:  bool       = false
 var selected: bool       = false
 var _wobble:  float      = 0.0
 
-var _body:   ColorRect
-var _sprite: Sprite2D
-var _value:  Label
-var _type:   Label
-var _wl:     ColorRect
-var _wr:     ColorRect
+# Visual nodes
+var _body:        ColorRect  # carriage body
+var _roof:        ColorRect  # carriage roof strip
+var _window_l:    ColorRect  # left window
+var _window_r:    ColorRect  # right window
+var _cargo:       Sprite2D   # cargo icon inside carriage
+var _value_lbl:   Label      # node value
+var _type_lbl:    Label      # HEAD/TAIL/node label
+var _wheel_l:     ColorRect
+var _wheel_r:     ColorRect
 
 func _ready() -> void:
 	_build_nodes()
 
-# #REGION:CHARACTERS — Build carriage visual children
 func _build_nodes() -> void:
-	# Carriage body
+	# Carriage body — wooden brown train car
 	_body = ColorRect.new()
-	_body.set_position(Vector2(-50, -36)); _body.set_size(Vector2(100, 72))
+	_body.color = Color("#5a3a18")
+	_body.set_position(Vector2(-50, -36)); _body.set_size(Vector2(100, 68))
 	add_child(_body)
 
-	# Carriage border overlay
-	var border := ColorRect.new()
-	border.color = Color(0, 0, 0, 0)  # transparent — outline drawn via draw
-	border.set_position(Vector2(-50, -36)); border.set_size(Vector2(100, 72))
-	add_child(border)
+	# Roof
+	_roof = ColorRect.new()
+	_roof.color = Color("#3a2010")
+	_roof.set_position(Vector2(-50, -36)); _roof.set_size(Vector2(100, 8))
+	add_child(_roof)
 
-	# Codemon icon
-	_sprite = Sprite2D.new()
-	_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sprite.scale = Vector2(3.2, 3.2)
-	_sprite.position = Vector2(-18, -8)
-	add_child(_sprite)
+	# Left window
+	_window_l = ColorRect.new()
+	_window_l.color = Color("#aaddff", 0.7)
+	_window_l.set_position(Vector2(-40, -24)); _window_l.set_size(Vector2(20, 20))
+	add_child(_window_l)
 
-	# Value label (large)
-	_value = Label.new()
-	_value.set_position(Vector2(6, -12)); _value.set_size(Vector2(42, 24))
-	_value.add_theme_font_size_override("font_size", 18)
-	add_child(_value)
+	# Right window
+	_window_r = ColorRect.new()
+	_window_r.color = Color("#aaddff", 0.7)
+	_window_r.set_position(Vector2(20, -24)); _window_r.set_size(Vector2(20, 20))
+	add_child(_window_r)
 
-	# Type label (small)
-	_type = Label.new()
-	_type.set_position(Vector2(-40, 26)); _type.set_size(Vector2(80, 14))
-	_type.add_theme_font_size_override("font_size", 9)
-	add_child(_type)
+	# Cargo sprite — centered in carriage
+	_cargo = Sprite2D.new()
+	_cargo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_cargo.scale = Vector2(2.8, 2.8)
+	_cargo.position = Vector2(0, -4)
+	add_child(_cargo)
 
-	# Wheels
-	_wl = ColorRect.new()
-	_wl.color = Color("#282838")
-	_wl.set_position(Vector2(-38, 30)); _wl.set_size(Vector2(18, 18))
-	add_child(_wl)
-	_wr = ColorRect.new()
-	_wr.color = Color("#282838")
-	_wr.set_position(Vector2(20, 30)); _wr.set_size(Vector2(18, 18))
-	add_child(_wr)
+	# Value label (node data value)
+	_value_lbl = Label.new()
+	_value_lbl.set_position(Vector2(14, -34)); _value_lbl.set_size(Vector2(34, 18))
+	_value_lbl.add_theme_font_size_override("font_size", 14)
+	add_child(_value_lbl)
+
+	# Type label (HEAD/TAIL/node)
+	_type_lbl = Label.new()
+	_type_lbl.set_position(Vector2(-46, 24)); _type_lbl.set_size(Vector2(92, 12))
+	_type_lbl.add_theme_font_size_override("font_size", 9)
+	_type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_type_lbl)
+
+	# Wheels — chunky circles using ColorRect
+	_wheel_l = ColorRect.new()
+	_wheel_l.color = Color("#1a1a1a")
+	_wheel_l.set_position(Vector2(-40, 30)); _wheel_l.set_size(Vector2(22, 22))
+	add_child(_wheel_l)
+	_wheel_r = ColorRect.new()
+	_wheel_r.color = Color("#1a1a1a")
+	_wheel_r.set_position(Vector2(18, 30)); _wheel_r.set_size(Vector2(22, 22))
+	add_child(_wheel_r)
+
+	# Wheel axle
+	var axle := ColorRect.new()
+	axle.color = Color("#555555")
+	axle.set_position(Vector2(-40, 38)); axle.set_size(Vector2(80, 6))
+	add_child(axle)
 
 	# Click area
 	var area := Area2D.new()
@@ -82,19 +118,33 @@ func set_state(head: bool, tail: bool) -> void:
 
 func _refresh() -> void:
 	if not is_instance_valid(_body): return
+
+	# Color scheme: HEAD=gold, TAIL=orange, selected=green, normal=blue
 	var col: Color = Color("#FFD93D") if is_head else \
 		(Color("#FF9F43") if is_tail else \
-		(Color("#6BCB77") if selected else Color("#4D96FF")))
-	_body.color = col.darkened(0.65)
-	var nid: int   = data.get("id", 0) as int
-	var key: String = ICONS[nid % ICONS.size()] as String
-	var tex: Texture2D = AssetMap.codemon(key)
-	if tex: _sprite.texture = tex
-	_value.text = data.get("label", "?") as String
-	_value.add_theme_color_override("font_color", col)
-	_type.text  = "HEAD" if is_head else ("TAIL" if is_tail else "node[%d]" % nid)
-	_type.add_theme_color_override("font_color", col.darkened(0.1))
-	_wl.color = col.darkened(0.8); _wr.color = col.darkened(0.8)
+		(Color("#6BCB77") if selected else Color("#7a5030")))
+
+	_body.color   = col.darkened(0.5)
+	_roof.color   = col.darkened(0.7)
+	_wheel_l.color = col.darkened(0.8)
+	_wheel_r.color = col.darkened(0.8)
+
+	# Window tint matches state
+	var wc: Color = col.lightened(0.3)
+	_window_l.color = Color(wc.r, wc.g, wc.b, 0.6)
+	_window_r.color = Color(wc.r, wc.g, wc.b, 0.6)
+
+	# Pick cargo sprite based on node id
+	var nid: int = data.get("id", 0) as int
+	var path: String = CARGO[nid % CARGO.size()] as String
+	if ResourceLoader.exists(path):
+		_cargo.texture = load(path) as Texture2D
+
+	_value_lbl.text = data.get("label", "?") as String
+	_value_lbl.add_theme_color_override("font_color", col.lightened(0.4))
+
+	_type_lbl.text = "HEAD →" if is_head else ("← TAIL" if is_tail else "node[%d]" % nid)
+	_type_lbl.add_theme_color_override("font_color", col.lightened(0.2))
 
 func _process(delta: float) -> void:
 	if selected:

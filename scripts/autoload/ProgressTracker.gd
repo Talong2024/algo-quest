@@ -68,6 +68,14 @@ var _current_lvl:   int    = 0
 func _ready() -> void:
 	_load()
 	_session_start = Time.get_ticks_msec() / 1000.0
+	_unlock_all_chapters_dev()
+
+func _unlock_all_chapters_dev() -> void:
+	## DEV: force all 5 chapters accessible regardless of saved state
+	## _get_ch() uses string keys "1","2","3","4","5"
+	for cid in range(1, 6):
+		var ch: Dictionary = _get_ch(cid)  # creates if missing
+		ch["unlocked"] = true
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -136,7 +144,7 @@ func _default_chapter(ch: int) -> Dictionary:
 			"attempts":    0,
 		}
 	return {
-		"unlocked":       ch == 1,
+		"unlocked":       true,  # all chapters accessible
 		"complete":       false,
 		"best_score":     0,
 		"total_time_sec": 0,

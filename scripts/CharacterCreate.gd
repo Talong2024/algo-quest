@@ -175,4 +175,10 @@ func _process(delta: float) -> void:
 func _on_confirm() -> void:
 	var appearance: Dictionary = _get_appearance()
 	SaveManager.set_player_appearance(appearance)
-	GameRouter.go_char_select()
+	# Always show the kingdom intro on first character creation
+	if not ProgressTracker.cutscene_seen("intro"):
+		GameRouter.go_cutscene("intro", func():
+			GameRouter.go_cutscene("ch1_open", func():
+				GameRouter.go_world_map()))
+	else:
+		GameRouter.go_world_map()

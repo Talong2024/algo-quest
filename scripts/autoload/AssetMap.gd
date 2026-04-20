@@ -135,6 +135,7 @@ const BGM: Dictionary = {
 }
 const SFX: Dictionary = {
 	"correct": "res://assets/codemon/audio/sfx/success.ogg",
+	"win":     "res://assets/codemon/audio/sfx/success.ogg",
 	"wrong":   "res://assets/codemon/audio/sfx/fail.ogg",
 	"click":   "res://assets/codemon/audio/sfx/button.ogg",
 	"chapter": "res://assets/codemon/audio/sfx/success.ogg",

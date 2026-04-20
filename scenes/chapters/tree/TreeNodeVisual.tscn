@@ -12,7 +12,7 @@ offset_top = -30.0
 offset_right = 30.0
 offset_bottom = 30.0
 
-[node name="Sprite" type="AnimatedSprite2D" parent="."]
+[node name="Sprite" type="Sprite2D" parent="."]
 texture_filter = 1
 scale = Vector2(3.0, 3.0)
 

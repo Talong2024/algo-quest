@@ -6,8 +6,19 @@ var _timer: Timer
 var _anim_lbl: Label
 var _step: int = 0
 
+const DIALOGUE_SCRIPTS = preload("res://scripts/shared/DialogueScripts.gd")
+
 func _ready() -> void:
 	_build_ui()
+	_launch_dialogue()
+
+func _launch_dialogue() -> void:
+	var dlg: Node = load("res://scenes/shared/DialogueBox.tscn").instantiate()
+	add_child(dlg)
+	var level: int = level_data.get("level", 1) as int
+	var lines: Array = DIALOGUE_SCRIPTS.tree_level_intro(level)
+	if not lines.is_empty():
+		dlg.show_dialogue(lines)
 	_timer = Timer.new()
 	_timer.wait_time = 1.6
 	_timer.timeout.connect(_demo_step)

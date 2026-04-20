@@ -143,50 +143,43 @@ position = Vector2(1200, 560)
 scale = Vector2(3.0, 3.0)
 z_index = 8
 
-[node name="DoormanLabel" type="Label" parent="."]
-position = Vector2(740, 58)
-theme_override_font_sizes/font_size = 10
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-text = "Doorman"
-z_index = 11
-
 [node name="Doorman" type="Node2D" parent="."]
-position = Vector2(760, 303)
-scale = Vector2(3.5, 3.5)
+position = Vector2(840, 300)
+scale = Vector2(2.5, 2.5)
 z_index = 10
 script = ExtResource("3")
 
-[node name="hair_bg" type="AnimatedSprite2D" parent="Doorman"]
+[node name="hair_bg" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="body" type="AnimatedSprite2D" parent="Doorman"]
+[node name="body" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="legs" type="AnimatedSprite2D" parent="Doorman"]
+[node name="legs" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="socks" type="AnimatedSprite2D" parent="Doorman"]
+[node name="socks" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="shoes" type="AnimatedSprite2D" parent="Doorman"]
+[node name="shoes" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="shirt" type="AnimatedSprite2D" parent="Doorman"]
+[node name="shirt" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false
 
-[node name="hair_fg" type="AnimatedSprite2D" parent="Doorman"]
+[node name="hair_fg" type="Sprite2D" parent="Doorman"]
 centered = false
 texture_filter = 1
 visible = false

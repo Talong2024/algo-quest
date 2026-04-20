@@ -7,16 +7,20 @@ extends Node2D
 
 const SCRIPTS: Dictionary = {
 	"intro": [
-		{ "speaker":"Narrator",          "text":"The Algorithm Kingdom once thrived under five ancient laws — Queue, Stack, Linked List, Tree, and Graph. Each structure governed a part of the realm.",                     "color":"#888899" },
-		{ "speaker":"Narrator",          "text":"Until the Algorithm Overlord shattered them all. Five structures broken. Five realms in chaos.",                                                                            "color":"#888899" },
-		{ "speaker":"Algorithm Overlord","text":"Without structure, there is only entropy. The kingdom is mine.",                                                                                                            "color":"#FF6B6B" },
-		{ "speaker":"Narrator",          "text":"But one soul understood every structure. The Code Keeper.",                                                                                                                "color":"#FFD93D" },
-		{ "speaker":"Code Keeper",       "text":"I will restore the queue, the stack, the list, the tree, the graph. Every structure will hold again.",                                                                     "color":"#6BCB77" },
+		{ "speaker":"Narrator",          "text":"You are a young scholar who arrived at the Algorithm Kingdom seeking knowledge. Five ancient structures govern this realm — Queue, Stack, Linked List, Tree, and Graph.",   "color":"#888899" },
+		{ "speaker":"Narrator",          "text":"But the Algorithm Overlord shattered them all. Five structures broken. Five realms in chaos. The kingdom is crumbling.",                                                    "color":"#888899" },
+		{ "speaker":"Algorithm Overlord","text":"Without structure, there is only entropy. This kingdom bends to my will.",                                                                                                  "color":"#FF6B6B" },
+		{ "speaker":"King Aldric",       "text":"Stranger! You arrived at the worst possible moment — but perhaps that is fate. Our Gate Captain says you understand data structures. Is this true?",                       "color":"#FFD93D" },
+		{ "speaker":"You",               "text":"I... yes. I studied them. Queue, Stack, Linked List, Tree, Graph. I know how they work.",                                                                                  "color":"#6BCB77" },
+		{ "speaker":"King Aldric",       "text":"Then YOU are our only hope. We name you Code Keeper — restorer of structures. Begin at the Kingdom Gate. The queue there is in chaos. Restore it.",                       "color":"#FFD93D" },
+		{ "speaker":"You",               "text":"I am just a scholar... but if the kingdom needs me, I will do what I can. I will restore every structure, one by one.",                                                    "color":"#6BCB77" },
 	],
 	"ch1_open": [
-		{ "speaker":"Gate Captain",      "text":"Keeper! The kingdom gate is in chaos! Citizens are served in random order — nobles pushing past elders, merchants cutting the line!",                                      "color":"#6BCB77" },
-		{ "speaker":"Gate Captain",      "text":"The FIFO law is broken. First In, First Out — the citizen who arrived first must be served first. Without it, the kingdom starves!",                                       "color":"#6BCB77" },
-		{ "speaker":"Code Keeper",       "text":"A queue. I understand. Stand aside — I will restore the order.",                                                                                                          "color":"#FFD93D" },
+		{ "speaker":"Gate Captain",      "text":"Code Keeper! I am Captain Vera. The Gate Queue Law is shattered — citizens push and shove. Merchants bribe their way forward. Elders are crushed at the back!",          "color":"#6BCB77" },
+		{ "speaker":"Gate Captain",      "text":"The ancient law was simple: whoever arrives FIRST is served FIRST. First In, First Out. Without it, the city cannot function.",                                            "color":"#6BCB77" },
+		{ "speaker":"You",               "text":"A queue. Yes — each arriving citizen joins the back. You serve strictly from the front. No exceptions.",                                                                    "color":"#FFD93D" },
+		{ "speaker":"Gate Captain",      "text":"Exactly! But watch for monsters disguised as citizens — skeletons and orcs trying to slip through. REJECT them with force. Are you ready?",                               "color":"#6BCB77" },
+		{ "speaker":"You",               "text":"Ready. The queue will hold.",                                                                                                                                              "color":"#FFD93D" },
 	],
 	"ch1_close": [
 		{ "speaker":"Gate Captain",      "text":"Order restored! The gate flows perfectly — every citizen served in the order they arrived. Thank you, Keeper!",                                                            "color":"#6BCB77" },
