@@ -76,20 +76,7 @@ func _spawn_world_behind() -> void:
 	add_child(_world_behind)
 
 func _play_walkin_then_tutorial() -> void:
-	if not is_instance_valid(_world_behind):
-		_show_tutorial(); return
-	var doorman: Node2D = _world_behind.get_node_or_null("Doorman") as Node2D
-	if not is_instance_valid(doorman):
-		_show_tutorial(); return
-	var target_y: float = doorman.position.y
-	doorman.position.y  = 820.0
-	doorman.play("walk"); doorman.set_direction(1)
-	var tw := create_tween()
-	tw.tween_property(doorman,"position:y",target_y,2.0).set_trans(Tween.TRANS_SINE)
-	tw.tween_callback(func():
-		doorman.play("idle"); doorman.set_direction(2)
-		get_tree().create_timer(0.6).timeout.connect(func(): _show_tutorial(), CONNECT_ONE_SHOT)
-	)
+	_show_tutorial()
 
 func _show_tutorial() -> void:
 	_free_scene()

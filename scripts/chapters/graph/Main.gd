@@ -75,10 +75,7 @@ func _go_game() -> void:
 	add_child(_active)
 	if _active.has_method("setup"):
 		_active.setup(cfg, _graph_manager, _logic, _dsa_panel)
-	if _active.has_signal("level_complete"):
-		_active.level_complete.connect(_on_level_complete)
-	if _active.has_signal("game_over"):
-		_active.game_over.connect(_on_game_over)
+	# level_complete/game_over wired in _build_shared — no duplicate here
 
 func _free_active() -> void:
 	if _active and is_instance_valid(_active):

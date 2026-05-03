@@ -239,42 +239,53 @@ func _finish() -> void:
 
 # ── Portrait ──────────────────────────────────────────────────────────────────
 
+# CGabriel faces: 8x8 grid at 48x48px per face
+const FACES_SHEET: String = "res://assets/game/characters/faces_sheet.png"
+# Map portrait key → face row,col in faces sheet
+const FACE_POS: Dictionary = {
+	"narrator": Vector2i(0, 0),
+	"player":   Vector2i(1, 0),
+	"doorman":  Vector2i(2, 0),
+	"king":     Vector2i(3, 0),
+	"merchant": Vector2i(0, 1),
+	"elderly":  Vector2i(1, 1),
+	"wizard":   Vector2i(2, 1),
+	"oracle":   Vector2i(3, 1),
+}
+
 func _update_portrait(portrait: String) -> void:
-	var preset: Dictionary = PORTRAIT_PRESETS.get(portrait,{}) as Dictionary
-	var appearance: Dictionary = preset.get("appearance",{}) as Dictionary
-	if portrait == "player":
-		appearance = SaveManager.get_player_appearance()
-		if appearance.is_empty():
-			appearance = CharacterRandomizer.randomize_character()
+	# Use CGabriel faces sheet — no LPC
+	_clear_portraits()
+	if not is_instance_valid(_port_node): return
+	if not ResourceLoader.exists(FACES_SHEET): return
 
-	if appearance.is_empty():
-		_clear_portraits()
-		return
+	var face_tex: Texture2D = load(FACES_SHEET) as Texture2D
+	var fpos: Vector2i = FACE_POS.get(portrait, Vector2i(0,0)) as Vector2i
+	const FTILE: int = 48
 
-	if not _portrait_sprites.has(portrait):
-		var spr: Node2D = load("res://scripts/lpc/CharacterSprite.gd").new()
-		spr.name  = "DlgPortrait_" + portrait
-		spr.scale = Vector2(2.5, 2.5)
+	# Reuse or create sprite for this portrait key
+	var spr: Sprite2D
+	if _portrait_sprites.has(portrait):
+		spr = _portrait_sprites[portrait] as Sprite2D
+	else:
+		spr = Sprite2D.new()
+		spr.name           = "DlgFace_" + portrait
+		spr.texture        = face_tex
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.region_enabled = true
+		spr.centered       = false
+		spr.scale          = Vector2(3.0, 3.0)
 		_port_node.add_child(spr)
-		spr.apply(appearance)
 		_portrait_sprites[portrait] = spr
 
-	_clear_portraits()
-	var active: Node2D = _portrait_sprites[portrait] as Node2D
-	active.visible = true
-	# Position: feet at bottom of portrait frame
-	# Portrait frame: y = 720-BOX_H = 540, height = BOX_H-4 = 176, bottom = 716
-	# CharacterSprite: feet at y=0, head top at y=-61*2.5=-152
-	# So position.y = 716 - 4 = 712 (feet near bottom of frame)
-	# position.x = 6 + PORT_W/2 - 32*2.5 = 6 + 85 - 80 = 11
-	active.position = Vector2(11, 712)
-	active.play("idle")
-	active.set_direction(3)  # face right toward text
+	spr.region_rect = Rect2(fpos.x * FTILE, fpos.y * FTILE, FTILE, FTILE)
+	spr.position    = Vector2(10, 720 - BOX_H + 4)
+	spr.visible     = true
 
-	# Bounce
+	# Bounce in
 	var tw := create_tween()
-	tw.tween_property(active,"scale",Vector2(2.6,2.6),0.07)
-	tw.tween_property(active,"scale",Vector2(2.5,2.5),0.10)
+	tw.tween_property(spr,"scale",Vector2(3.2,3.2),0.07)
+	tw.tween_property(spr,"scale",Vector2(3.0,3.0),0.10)
 
 func _clear_portraits() -> void:
 	for k in _portrait_sprites:

@@ -3,7 +3,7 @@ extends Node2D
 signal city_clicked(node_id: int)
 
 var _cfg:       Dictionary = {}
-var _graph_ref: Node2D
+var _graph_ref: Node
 var _logic_ref: Node
 var _dsa_panel: Node2D
 
@@ -21,7 +21,7 @@ var _right_panel: Control
 var _q_btn:     Button
 var _algo_state_label: Label
 
-func setup(cfg: Dictionary, g: Node2D, gl: Node, dp: Node2D) -> void:
+func setup(cfg: Dictionary, g: Node, gl: Node, dp: Node2D) -> void:
 	_cfg       = cfg
 	_graph_ref = g
 	_logic_ref = gl

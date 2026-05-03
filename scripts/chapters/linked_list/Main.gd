@@ -66,12 +66,14 @@ func _go_game() -> void:
 	if _logic.has_method("start_level"): _logic.start_level(str(cfg.get("op","traverse")), cfg)
 	_active = (load(GAME_SCENE) as PackedScene).instantiate()
 	add_child(_active)
+	if _logic.has_method("init"): _logic.init(_ll_manager)
+	var vals: Array = []
+	for i in cfg.get("goal",5): vals.append((i+1)*10)
+	_ll_manager.build(vals)
+	if _logic.has_method("start_level"): _logic.start_level(str(cfg.get("op","traverse")), cfg)
 	if _active.has_method("setup"):
 		_active.setup(cfg, _ll_manager, _logic, _dsa_panel)
-	if _active.has_signal("level_complete"):
-		_active.level_complete.connect(_on_level_complete)
-	if _active.has_signal("game_over"):
-		_active.game_over.connect(_on_game_over)
+	# level_complete/game_over wired in _build_shared — no duplicate here
 
 func _free_active() -> void:
 	if _active and is_instance_valid(_active):

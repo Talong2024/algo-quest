@@ -11,24 +11,28 @@ const TILE: int = 32
 # Map state → (col, row) in the orb sheet
 # Sheet: 4 cols × 8 rows. Each col = different color family.
 const STATE_ORB: Dictionary = {
-	"normal":     Vector2i(0, 0),  # blue-grey
-	"searching":  Vector2i(1, 0),  # gold/yellow
-	"found":      Vector2i(2, 0),  # green
-	"inserted":   Vector2i(3, 0),  # bright blue
-	"deleted":    Vector2i(0, 2),  # dark/grey
-	"unbalanced": Vector2i(1, 1),  # orange
-	"path":       Vector2i(2, 1),  # teal
-	"heap_max":   Vector2i(3, 1),  # purple
+	"normal":      Vector2i(0, 0),  # blue-grey
+	"searching":   Vector2i(1, 0),  # gold/yellow
+	"highlighted": Vector2i(1, 0),  # gold (same as searching)
+	"found":       Vector2i(2, 0),  # green
+	"inserted":    Vector2i(3, 0),  # bright blue
+	"deleted":     Vector2i(0, 2),  # dark/grey
+	"wrong":       Vector2i(0, 3),  # red-ish
+	"unbalanced":  Vector2i(1, 1),  # orange
+	"path":        Vector2i(2, 1),  # teal
+	"heap_max":    Vector2i(3, 1),  # purple
 }
 const STATE_COLORS: Dictionary = {
-	"normal":     Color("#4a5a8a"),
-	"searching":  Color("#FFD93D"),
-	"found":      Color("#6BCB77"),
-	"inserted":   Color("#4D96FF"),
-	"deleted":    Color("#667788"),
-	"unbalanced": Color("#FF9F43"),
-	"path":       Color("#44DDCC"),
-	"heap_max":   Color("#C77DFF"),
+	"normal":      Color("#4a5a8a"),
+	"searching":   Color("#FFD93D"),
+	"highlighted": Color("#FFD93D"),
+	"found":       Color("#6BCB77"),
+	"inserted":    Color("#4D96FF"),
+	"deleted":     Color("#667788"),
+	"wrong":       Color("#FF6B6B"),
+	"unbalanced":  Color("#FF9F43"),
+	"path":        Color("#44DDCC"),
+	"heap_max":    Color("#C77DFF"),
 }
 
 var data:      Dictionary = {}

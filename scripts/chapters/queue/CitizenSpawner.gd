@@ -96,7 +96,7 @@ func _spawn_next() -> void:
 	# Seeded appearance so same citizen always looks the same
 	seed(_id + 54321)
 	if not _cached_appearances.has(_id):
-		_cached_appearances[_id] = CharacterRandomizer.randomize_character()
+		pass  # appearance now handled by CitizenNode via CGabriel sheet
 	var appearance: Dictionary = _cached_appearances[_id]
 	# Override appearance for enemy types
 	var ctype: String = template.get("type","normal")
@@ -129,5 +129,5 @@ func _spawn_next() -> void:
 func _get_appearance(cid: int) -> Dictionary:
 	if not _cached_appearances.has(cid):
 		seed(cid + 54321)
-		_cached_appearances[cid] = CharacterRandomizer.randomize_character()
+		pass  # appearance now handled by CitizenNode via CGabriel sheet
 	return _cached_appearances[cid]
